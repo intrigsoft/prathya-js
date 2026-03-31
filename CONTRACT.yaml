@@ -1,0 +1,114 @@
+module:
+  id: PRATYA
+  name: Pratya Core Engine
+  description: Requirement coverage and traceability engine for Contract-Driven Development
+  owner: intrigsoft
+  created: "2026-03-06"
+  version: 0.1.0
+
+requirements:
+  - id: PRATYA-001
+    version: 1.0.0
+    status: approved
+    title: CONTRACT.yaml parsing and validation
+    description: >
+      The parser must load a CONTRACT.yaml file, validate its structure against
+      the schema, and return a typed ModuleContract object.
+    acceptance_criteria:
+      - Valid CONTRACT.yaml parses to a ModuleContract with correct fields
+      - Requirement fields are mapped correctly
+      - Supersession fields are mapped correctly
+    corner_cases:
+      - id: PRATYA-001-CC-001
+        description: Invalid YAML syntax is rejected with a clear error
+      - id: PRATYA-001-CC-002
+        description: Non-object YAML content is rejected
+      - id: PRATYA-001-CC-003
+        description: Empty requirements list is accepted as valid
+      - id: PRATYA-001-CC-004
+        description: Malformed requirement IDs are rejected via schema validation
+      - id: PRATYA-001-CC-005
+        description: Duplicate requirement IDs are rejected
+      - id: PRATYA-001-CC-006
+        description: Broken superseded_by reference is rejected
+      - id: PRATYA-001-CC-007
+        description: Broken supersedes reference is rejected
+    changelog:
+      - version: 1.0.0
+        date: "2026-03-06"
+        note: Initial definition
+
+  - id: PRATYA-002
+    version: 1.0.0
+    status: approved
+    title: Coverage matrix computation
+    description: >
+      The coverage engine must cross-reference trace entries against active
+      requirements to produce per-requirement and aggregate coverage percentages.
+    acceptance_criteria:
+      - Zero traces produce 0% coverage
+      - Deprecated and superseded requirements are excluded by default
+      - Partial coverage computes correct percentages
+      - Full coverage of approved requirements produces 100%
+    corner_cases:
+      - id: PRATYA-002-CC-001
+        description: All tests passing marks requirement as passing=true
+      - id: PRATYA-002-CC-002
+        description: Any test failing marks requirement as passing=false
+      - id: PRATYA-002-CC-003
+        description: No tests marks requirement as passing=null
+      - id: PRATYA-002-CC-004
+        description: Istanbul coverage-summary.json is read for code coverage
+      - id: PRATYA-002-CC-005
+        description: Missing coverage file returns undefined codeCoverage
+      - id: PRATYA-002-CC-006
+        description: Corner case coverage is computed correctly across all requirements
+    changelog:
+      - version: 1.0.0
+        date: "2026-03-06"
+        note: Initial definition
+
+  - id: PRATYA-003
+    version: 1.0.0
+    status: approved
+    title: Audit rules engine
+    description: >
+      The audit engine must detect violations by comparing traces and contract
+      state, emitting typed violations with correct severity.
+    acceptance_criteria:
+      - Orphan annotations produce ERROR violations
+      - Uncovered approved requirements produce ERROR violations
+      - Uncovered corner cases produce WARN violations
+    corner_cases:
+      - id: PRATYA-003-CC-001
+        description: Deprecated requirement reference produces WARN
+      - id: PRATYA-003-CC-002
+        description: Superseded requirement reference produces WARN with successor hint
+      - id: PRATYA-003-CC-003
+        description: Broken supersession chain produces ERROR
+      - id: PRATYA-003-CC-004
+        description: Stale requirement version from previous report produces WARN
+      - id: PRATYA-003-CC-005
+        description: Fully covered contract produces zero violations
+    changelog:
+      - version: 1.0.0
+        date: "2026-03-06"
+        note: Initial definition
+
+  - id: PRATYA-004
+    version: 1.0.0
+    status: approved
+    title: Report generation
+    description: >
+      The report engine must produce JSON and HTML reports from a CoverageMatrix.
+    acceptance_criteria:
+      - JSON report contains module, generatedAt, summary, requirements, violations
+      - JSON summary counts are accurate
+      - HTML report contains all requirement IDs and coverage percentages
+    corner_cases:
+      - id: PRATYA-004-CC-001
+        description: HTML report includes violation sections when violations exist
+    changelog:
+      - version: 1.0.0
+        date: "2026-03-06"
+        note: Initial definition

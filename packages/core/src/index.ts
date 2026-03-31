@@ -28,3 +28,9 @@ export {
   COVERAGE_BELOW_THRESHOLD,
 } from './audit.js';
 export { writeHtmlReport, writeJsonReport } from './report.js';
+export {
+  finalizeReport,
+  resolveReporterOptions,
+  DEFAULT_REPORTER_OPTIONS,
+} from './reporter-utils.js';
+export type { IntegrationReporterOptions } from './reporter-utils.js';

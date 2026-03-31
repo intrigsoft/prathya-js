@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, beforeEach, afterEach } from 'vitest';
+import { test, expect } from '@pratya/vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
@@ -79,7 +80,8 @@ afterEach(() => {
 });
 
 describe('writeJsonReport', () => {
-  it('writes valid JSON with expected shape', () => {
+  test('writes valid JSON with expected shape', ({ requirement }) => {
+    requirement('PRATYA-004');
     const matrix = makeSampleMatrix();
     const outputPath = path.join(tmpDir, 'report', 'pratya-report.json');
     writeJsonReport(matrix, outputPath);
@@ -94,7 +96,8 @@ describe('writeJsonReport', () => {
     expect(raw.violations).toHaveLength(2);
   });
 
-  it('counts active and covered requirements correctly', () => {
+  test('counts active and covered requirements correctly', ({ requirement }) => {
+    requirement('PRATYA-004');
     const matrix = makeSampleMatrix();
     const outputPath = path.join(tmpDir, 'pratya-report.json');
     writeJsonReport(matrix, outputPath);
@@ -106,7 +109,8 @@ describe('writeJsonReport', () => {
 });
 
 describe('writeHtmlReport', () => {
-  it('generates an HTML file with key markers', () => {
+  test('generates an HTML file with key markers', ({ requirement }) => {
+    requirement(['PRATYA-004', 'PRATYA-004-CC-001']);
     const matrix = makeSampleMatrix();
     writeHtmlReport(matrix, tmpDir);
 

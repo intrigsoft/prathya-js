@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest';
+import { describe } from 'vitest';
+import { test, expect } from '@pratya/vitest';
 import * as path from 'node:path';
 import { parseContract } from '../src/parser.js';
 import { audit, ORPHAN_ANNOTATION, UNCOVERED_REQUIREMENT, UNCOVERED_CORNER_CASE, DEPRECATED_REFERENCE, SUPERSEDED_REFERENCE, BROKEN_SUPERSESSION, STALE_REQUIREMENT_VERSION } from '../src/audit.js';
@@ -11,7 +12,8 @@ function loadContract() {
 }
 
 describe('audit', () => {
-  it('emits ORPHAN_ANNOTATION for unknown IDs', () => {
+  test('emits ORPHAN_ANNOTATION for unknown IDs', ({ requirement }) => {
+    requirement('PRATYA-003');
     const contract = loadContract();
     const traces: TraceEntry[] = [
       { requirementIds: ['AUTH-999'], testTitle: 'orphan test', testFile: 'a.ts', result: 'passed' },
@@ -24,16 +26,17 @@ describe('audit', () => {
     expect(orphan!.message).toContain('AUTH-999');
   });
 
-  it('emits UNCOVERED_REQUIREMENT for approved requirements with no tests', () => {
+  test('emits UNCOVERED_REQUIREMENT for approved requirements with no tests', ({ requirement }) => {
+    requirement('PRATYA-003');
     const contract = loadContract();
     const violations = audit(contract, []);
     const uncovered = violations.filter(v => v.type === UNCOVERED_REQUIREMENT);
-    // 3 approved requirements: AUTH-001, AUTH-002, AUTH-005
     expect(uncovered).toHaveLength(3);
     expect(uncovered.every(v => v.severity === 'ERROR')).toBe(true);
   });
 
-  it('emits UNCOVERED_CORNER_CASE for approved corner cases with no tests', () => {
+  test('emits UNCOVERED_CORNER_CASE for approved corner cases with no tests', ({ requirement }) => {
+    requirement('PRATYA-003');
     const contract = loadContract();
     const traces: TraceEntry[] = [
       { requirementIds: ['AUTH-001'], testTitle: 'login', testFile: 'a.ts', result: 'passed' },
@@ -43,14 +46,13 @@ describe('audit', () => {
 
     const violations = audit(contract, traces);
     const uncoveredCC = violations.filter(v => v.type === UNCOVERED_CORNER_CASE);
-    // AUTH-001 has 3 CCs, AUTH-002 has 1 CC, AUTH-005 has 2 CCs = 6 uncovered corner cases
     expect(uncoveredCC).toHaveLength(6);
     expect(uncoveredCC.every(v => v.severity === 'WARN')).toBe(true);
   });
 
-  it('emits DEPRECATED_REFERENCE when referencing deprecated requirement', () => {
+  test('emits DEPRECATED_REFERENCE when referencing deprecated requirement', ({ requirement }) => {
+    requirement('PRATYA-003-CC-001');
     const contract = loadContract();
-    // Make a contract with a deprecated requirement for this test
     const modifiedContract = {
       ...contract,
       requirements: contract.requirements.map(r =>
@@ -68,7 +70,8 @@ describe('audit', () => {
     expect(deprecated!.severity).toBe('WARN');
   });
 
-  it('emits SUPERSEDED_REFERENCE when referencing superseded requirement', () => {
+  test('emits SUPERSEDED_REFERENCE when referencing superseded requirement', ({ requirement }) => {
+    requirement('PRATYA-003-CC-002');
     const contract = loadContract();
     const traces: TraceEntry[] = [
       { requirementIds: ['AUTH-003'], testTitle: 'old test', testFile: 'a.ts', result: 'passed' },
@@ -81,7 +84,8 @@ describe('audit', () => {
     expect(superseded!.message).toContain('AUTH-005');
   });
 
-  it('emits BROKEN_SUPERSESSION for non-existent superseded_by target', () => {
+  test('emits BROKEN_SUPERSESSION for non-existent superseded_by target', ({ requirement }) => {
+    requirement('PRATYA-003-CC-003');
     const contract = {
       ...loadContract(),
       requirements: [
@@ -106,7 +110,8 @@ describe('audit', () => {
     expect(broken!.message).toContain('AUTH-999');
   });
 
-  it('emits STALE_REQUIREMENT_VERSION from previous report', () => {
+  test('emits STALE_REQUIREMENT_VERSION from previous report', ({ requirement }) => {
+    requirement('PRATYA-003-CC-004');
     const contract = loadContract();
     const previousReport: CoverageMatrix = {
       moduleId: 'AUTH',
@@ -137,7 +142,8 @@ describe('audit', () => {
     expect(stale!.message).toContain('v1.1.0');
   });
 
-  it('does not emit false positives when everything is properly covered', () => {
+  test('does not emit false positives when everything is properly covered', ({ requirement }) => {
+    requirement('PRATYA-003-CC-005');
     const contract = loadContract();
     const traces: TraceEntry[] = [
       { requirementIds: ['AUTH-001'], testTitle: 'login', testFile: 'a.ts', result: 'passed' },
@@ -152,10 +158,8 @@ describe('audit', () => {
     ];
 
     const violations = audit(contract, traces);
-    // Should only have no ERROR violations
     const errors = violations.filter(v => v.severity === 'ERROR');
     expect(errors).toHaveLength(0);
-    // No WARN either when fully covered
     expect(violations).toHaveLength(0);
   });
 });

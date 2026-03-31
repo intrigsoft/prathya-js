@@ -1,11 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { describe } from 'vitest';
+import { test, expect } from '@pratya/vitest';
 import * as path from 'node:path';
 import { parseContract, parseContractYaml } from '../src/parser.js';
 
 const FIXTURE_DIR = path.resolve(__dirname, 'fixtures');
 
 describe('parseContract', () => {
-  it('parses a valid CONTRACT.yaml', () => {
+  test('parses a valid CONTRACT.yaml', ({ requirement }) => {
+    requirement('PRATYA-001');
     const contract = parseContract(path.join(FIXTURE_DIR, 'valid-contract.yaml'));
     expect(contract.moduleId).toBe('AUTH');
     expect(contract.moduleName).toBe('Authentication Module');
@@ -13,7 +15,8 @@ describe('parseContract', () => {
     expect(contract.requirements).toHaveLength(4);
   });
 
-  it('maps requirement fields correctly', () => {
+  test('maps requirement fields correctly', ({ requirement }) => {
+    requirement('PRATYA-001');
     const contract = parseContract(path.join(FIXTURE_DIR, 'valid-contract.yaml'));
     const auth001 = contract.requirements.find(r => r.id === 'AUTH-001')!;
     expect(auth001.version).toBe('1.1.0');
@@ -24,7 +27,8 @@ describe('parseContract', () => {
     expect(auth001.changelog).toHaveLength(2);
   });
 
-  it('maps supersession fields', () => {
+  test('maps supersession fields', ({ requirement }) => {
+    requirement('PRATYA-001');
     const contract = parseContract(path.join(FIXTURE_DIR, 'valid-contract.yaml'));
     const auth003 = contract.requirements.find(r => r.id === 'AUTH-003')!;
     expect(auth003.status).toBe('superseded');
@@ -34,19 +38,23 @@ describe('parseContract', () => {
     expect(auth005.supersedes).toBe('AUTH-003');
   });
 
-  it('rejects invalid YAML', () => {
+  test('rejects invalid YAML', ({ requirement }) => {
+    requirement('PRATYA-001-CC-001');
     expect(() => parseContractYaml('{{{', 'test.yaml')).toThrow('Failed to parse YAML');
   });
 
-  it('rejects non-object YAML', () => {
+  test('rejects non-object YAML', ({ requirement }) => {
+    requirement('PRATYA-001-CC-002');
     expect(() => parseContractYaml(':::invalid', 'test.yaml')).toThrow('empty or not an object');
   });
 
-  it('rejects empty content', () => {
+  test('rejects empty content', ({ requirement }) => {
+    requirement('PRATYA-001-CC-002');
     expect(() => parseContractYaml('', 'test.yaml')).toThrow('empty or not an object');
   });
 
-  it('rejects missing required fields', () => {
+  test('accepts empty requirements list', ({ requirement }) => {
+    requirement('PRATYA-001-CC-003');
     const yaml = `
 module:
   id: AUTH
@@ -55,12 +63,12 @@ module:
   version: 1.0.0
 requirements: []
 `;
-    // This should parse fine — empty requirements is valid
     const contract = parseContractYaml(yaml);
     expect(contract.requirements).toHaveLength(0);
   });
 
-  it('rejects malformed requirement IDs', () => {
+  test('rejects malformed requirement IDs', ({ requirement }) => {
+    requirement('PRATYA-001-CC-004');
     const yaml = `
 module:
   id: AUTH
@@ -80,7 +88,8 @@ requirements:
     expect(() => parseContractYaml(yaml)).toThrow('validation failed');
   });
 
-  it('rejects duplicate requirement IDs', () => {
+  test('rejects duplicate requirement IDs', ({ requirement }) => {
+    requirement('PRATYA-001-CC-005');
     const yaml = `
 module:
   id: AUTH
@@ -108,7 +117,8 @@ requirements:
     expect(() => parseContractYaml(yaml)).toThrow("Duplicate requirement ID 'AUTH-001'");
   });
 
-  it('rejects broken superseded_by reference', () => {
+  test('rejects broken superseded_by reference', ({ requirement }) => {
+    requirement('PRATYA-001-CC-006');
     const yaml = `
 module:
   id: AUTH
@@ -129,7 +139,8 @@ requirements:
     expect(() => parseContractYaml(yaml)).toThrow("superseded_by 'AUTH-999' which does not exist");
   });
 
-  it('rejects broken supersedes reference', () => {
+  test('rejects broken supersedes reference', ({ requirement }) => {
+    requirement('PRATYA-001-CC-007');
     const yaml = `
 module:
   id: AUTH

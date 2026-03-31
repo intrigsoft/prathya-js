@@ -1,0 +1,37 @@
+{
+  "name": "@pratya/vitest",
+  "version": "0.1.0",
+  "description": "Vitest integration for Pratya requirement coverage",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./reporter": {
+      "types": "./dist/reporter.d.ts",
+      "import": "./dist/reporter.js",
+      "require": "./dist/reporter.cjs"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup && cp src/index.d.ts dist/index.d.ts && cp src/reporter.d.ts dist/reporter.d.ts",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@pratya/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "vitest": "^1.6.0"
+  },
+  "peerDependencies": {
+    "vitest": ">=1.6.0"
+  },
+  "license": "Apache-2.0"
+}

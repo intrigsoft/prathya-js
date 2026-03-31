@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest';
+import { describe } from 'vitest';
+import { test, expect } from '@pratya/vitest';
 import * as path from 'node:path';
 import { parseContract } from '../src/parser.js';
 import { computeCoverage } from '../src/coverage.js';
@@ -11,7 +12,8 @@ function loadContract() {
 }
 
 describe('computeCoverage', () => {
-  it('computes 0% when no traces exist', () => {
+  test('computes 0% when no traces exist', ({ requirement }) => {
+    requirement('PRATYA-002');
     const contract = loadContract();
     const matrix = computeCoverage(contract, []);
     expect(matrix.requirementCoverage).toBe(0);
@@ -19,15 +21,16 @@ describe('computeCoverage', () => {
     expect(matrix.requirements.every(r => r.passing === null)).toBe(true);
   });
 
-  it('excludes deprecated and superseded by default', () => {
+  test('excludes deprecated and superseded by default', ({ requirement }) => {
+    requirement('PRATYA-002');
     const contract = loadContract();
     const matrix = computeCoverage(contract, []);
-    // AUTH-003 is superseded, so only AUTH-001, AUTH-002, AUTH-005 are active
     expect(matrix.requirements).toHaveLength(3);
     expect(matrix.requirements.map(r => r.id).sort()).toEqual(['AUTH-001', 'AUTH-002', 'AUTH-005']);
   });
 
-  it('computes correct percentages with partial coverage', () => {
+  test('computes correct percentages with partial coverage', ({ requirement }) => {
+    requirement('PRATYA-002');
     const contract = loadContract();
     const traces: TraceEntry[] = [
       {
@@ -45,13 +48,12 @@ describe('computeCoverage', () => {
     ];
 
     const matrix = computeCoverage(contract, traces);
-    // 1 of 3 approved requirements covered
     expect(matrix.requirementCoverage).toBeCloseTo(33.3, 0);
-    // AUTH-001 has 3 CCs, AUTH-002 has 1 CC, AUTH-005 has 2 CCs = 6 total, 1 covered
     expect(matrix.cornerCaseCoverage).toBeCloseTo(16.7, 0);
   });
 
-  it('computes 100% when all approved requirements are covered', () => {
+  test('computes 100% when all approved requirements are covered', ({ requirement }) => {
+    requirement('PRATYA-002');
     const contract = loadContract();
     const traces: TraceEntry[] = [
       { requirementIds: ['AUTH-001'], testTitle: 'login', testFile: 'a.ts', result: 'passed' },
@@ -63,7 +65,8 @@ describe('computeCoverage', () => {
     expect(matrix.requirementCoverage).toBe(100);
   });
 
-  it('marks passing correctly — all pass = true', () => {
+  test('marks passing correctly — all pass = true', ({ requirement }) => {
+    requirement('PRATYA-002-CC-001');
     const contract = loadContract();
     const traces: TraceEntry[] = [
       { requirementIds: ['AUTH-001'], testTitle: 'test1', testFile: 'a.ts', result: 'passed' },
@@ -76,7 +79,8 @@ describe('computeCoverage', () => {
     expect(auth001.tests).toHaveLength(2);
   });
 
-  it('marks passing correctly — any fail = false', () => {
+  test('marks passing correctly — any fail = false', ({ requirement }) => {
+    requirement('PRATYA-002-CC-002');
     const contract = loadContract();
     const traces: TraceEntry[] = [
       { requirementIds: ['AUTH-001'], testTitle: 'test1', testFile: 'a.ts', result: 'passed' },
@@ -88,14 +92,16 @@ describe('computeCoverage', () => {
     expect(auth001.passing).toBe(false);
   });
 
-  it('marks passing as null when no tests', () => {
+  test('marks passing as null when no tests', ({ requirement }) => {
+    requirement('PRATYA-002-CC-003');
     const contract = loadContract();
     const matrix = computeCoverage(contract, []);
     const auth001 = matrix.requirements.find(r => r.id === 'AUTH-001')!;
     expect(auth001.passing).toBeNull();
   });
 
-  it('reads code coverage from Istanbul summary', () => {
+  test('reads code coverage from Istanbul summary', ({ requirement }) => {
+    requirement('PRATYA-002-CC-004');
     const contract = loadContract();
     const matrix = computeCoverage(contract, [], {
       codeCoverageSummaryPath: path.join(FIXTURE_DIR, 'coverage-summary.json'),
@@ -103,7 +109,8 @@ describe('computeCoverage', () => {
     expect(matrix.codeCoverage).toBe(73.0);
   });
 
-  it('returns undefined codeCoverage when file missing', () => {
+  test('returns undefined codeCoverage when file missing', ({ requirement }) => {
+    requirement('PRATYA-002-CC-005');
     const contract = loadContract();
     const matrix = computeCoverage(contract, [], {
       codeCoverageSummaryPath: '/nonexistent/coverage.json',
@@ -111,7 +118,8 @@ describe('computeCoverage', () => {
     expect(matrix.codeCoverage).toBeUndefined();
   });
 
-  it('computes corner case coverage correctly', () => {
+  test('computes corner case coverage correctly', ({ requirement }) => {
+    requirement('PRATYA-002-CC-006');
     const contract = loadContract();
     const traces: TraceEntry[] = [
       { requirementIds: ['AUTH-001-CC-001'], testTitle: 'cc1', testFile: 'a.ts', result: 'passed' },
