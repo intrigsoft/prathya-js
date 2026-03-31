@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pratya Coverage Report — {{moduleName}}</title>
+<style>
+  :root {
+    --green: #22c55e; --red: #ef4444; --grey: #9ca3af; --amber: #f59e0b;
+    --bg: #f8fafc; --card-bg: #ffffff; --text: #1e293b; --border: #e2e8f0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; padding: 2rem; }
+  .container { max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+  .subtitle { color: var(--grey); font-size: 0.875rem; margin-bottom: 1.5rem; }
+
+  /* Summary card */
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+  .metric-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; }
+  .metric-card .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--grey); }
+  .metric-card .value { font-size: 2rem; font-weight: 700; }
+
+  /* Quadrant badge */
+  .quadrant-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 600; margin-bottom: 1.5rem; }
+  .quadrant-healthy { background: #dcfce7; color: #166534; }
+  .quadrant-warn { background: #fef9c3; color: #854d0e; }
+  .quadrant-danger { background: #fee2e2; color: #991b1b; }
+  .quadrant-good { background: #dcfce7; color: #166534; }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 2rem; }
+  th { background: #f1f5f9; text-align: left; padding: 0.75rem 1rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  td { padding: 0.75rem 1rem; border-top: 1px solid var(--border); font-size: 0.875rem; }
+  tr:hover { background: #f8fafc; }
+
+  /* Status badges */
+  .badge { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+  .badge.approved { background: #dcfce7; color: #166534; }
+  .badge.draft { background: #e0e7ff; color: #3730a3; }
+  .badge.deprecated { background: #f3f4f6; color: #6b7280; text-decoration: line-through; }
+  .badge.superseded { background: #fef9c3; color: #854d0e; }
+
+  .badge.passing { background: #dcfce7; color: #166534; }
+  .badge.failing { background: #fee2e2; color: #991b1b; }
+  .badge.not-covered { background: #f3f4f6; color: #6b7280; }
+
+  /* Expandable details */
+  details { margin-top: 0.5rem; }
+  details summary { cursor: pointer; font-size: 0.8rem; color: #6366f1; }
+  details .detail-content { padding: 0.75rem; background: #f8fafc; border-radius: 4px; margin-top: 0.5rem; font-size: 0.8rem; }
+  .test-row { padding: 0.25rem 0; border-bottom: 1px solid var(--border); }
+  .test-row:last-child { border-bottom: none; }
+  .cc-row { padding: 0.25rem 0; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); }
+  .cc-row:last-child { border-bottom: none; }
+
+  /* Violations */
+  .violations { margin-bottom: 2rem; }
+  .violation-group { margin-bottom: 1rem; }
+  .violation-group h3 { font-size: 0.875rem; margin-bottom: 0.5rem; }
+  .violation { padding: 0.5rem 0.75rem; border-left: 3px solid; margin-bottom: 0.25rem; font-size: 0.8rem; background: var(--card-bg); }
+  .violation.error { border-color: var(--red); }
+  .violation.warn { border-color: var(--amber); }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Pratya Coverage Report</h1>
+  <p class="subtitle">{{moduleId}} — {{moduleName}} &middot; Generated {{generatedAt}}</p>
+
+  <span class="quadrant-badge {{quadrantClass}}">{{quadrantLabel}}</span>
+
+  <div class="summary">
+    <div class="metric-card">
+      <div class="label">Requirement Coverage</div>
+      <div class="value">{{requirementCoverage}}%</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">Corner Case Coverage</div>
+      <div class="value">{{cornerCaseCoverage}}%</div>
+    </div>
+    {{#hasCodeCoverage}}
+    <div class="metric-card">
+      <div class="label">Code Coverage</div>
+      <div class="value">{{codeCoverage}}%</div>
+    </div>
+    {{/hasCodeCoverage}}
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Title</th>
+        <th>Version</th>
+        <th>Status</th>
+        <th>Coverage</th>
+        <th>Corner Cases</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#requirements}}
+      <tr>
+        <td><strong>{{id}}</strong></td>
+        <td>
+          {{title}}
+          <details>
+            <summary>{{tests.length}} test(s)</summary>
+            <div class="detail-content">
+              {{#hasTests}}
+              {{#tests}}
+              <div class="test-row">{{title}} <span style="color:var(--grey)">(v{{requirementVersionAtTest}})</span></div>
+              {{/tests}}
+              {{/hasTests}}
+              {{^hasTests}}
+              <em>No mapped tests</em>
+              {{/hasTests}}
+
+              {{#hasCornerCases}}
+              <hr style="margin: 0.5rem 0; border: none; border-top: 1px solid var(--border);">
+              <strong>Corner Cases</strong>
+              {{#cornerCases}}
+              <div class="cc-row">
+                <span>{{id}}</span>
+                <span class="badge {{passingClass}}">{{passingLabel}}</span>
+              </div>
+              {{/cornerCases}}
+              {{/hasCornerCases}}
+            </div>
+          </details>
+        </td>
+        <td>{{version}}</td>
+        <td><span class="badge {{statusClass}}">{{status}}</span></td>
+        <td><span class="badge {{passingClass}}">{{passingLabel}}</span></td>
+        <td>{{#hasCornerCases}}{{cornerCases.length}} case(s){{/hasCornerCases}}{{^hasCornerCases}}&mdash;{{/hasCornerCases}}</td>
+      </tr>
+      {{/requirements}}
+    </tbody>
+  </table>
+
+  {{#hasErrors}}
+  <div class="violations">
+    <div class="violation-group">
+      <h3>Errors</h3>
+      {{#errorViolations}}
+      <div class="violation error">{{message}}</div>
+      {{/errorViolations}}
+    </div>
+  </div>
+  {{/hasErrors}}
+
+  {{#hasWarnings}}
+  <div class="violations">
+    <div class="violation-group">
+      <h3>Warnings</h3>
+      {{#warnViolations}}
+      <div class="violation warn">{{message}}</div>
+      {{/warnViolations}}
+    </div>
+  </div>
+  {{/hasWarnings}}
+
+  <p style="text-align: center; color: var(--grey); font-size: 0.75rem; margin-top: 2rem;">
+    Generated by <a href="https://github.com/intrigsoft/pratya" style="color: #6366f1;">Pratya</a>
+  </p>
+</div>
+</body>
+</html>

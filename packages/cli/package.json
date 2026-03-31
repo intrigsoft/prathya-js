@@ -1,0 +1,23 @@
+{
+  "name": "pratya",
+  "version": "0.3.0",
+  "description": "CLI for Pratya requirement coverage framework",
+  "type": "module",
+  "bin": {
+    "pratya": "./dist/index.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@pratya/core": "workspace:*",
+    "commander": "^12.0.0",
+    "execa": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  },
+  "license": "Apache-2.0"
+}
