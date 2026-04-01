@@ -5,7 +5,7 @@ import { computeCoverage } from './coverage.js';
 import { audit } from './audit.js';
 import { COVERAGE_BELOW_THRESHOLD } from './audit.js';
 import { writeHtmlReport, writeJsonReport } from './report.js';
-import type { TraceEntry, RequirementStatus, CoverageMatrix } from './model.js';
+import type { TraceEntry, RequirementStatus, CoverageMatrix, ModuleContract } from './model.js';
 
 export interface IntegrationReporterOptions {
   contractPath: string;
@@ -99,7 +99,7 @@ export function finalizeReport(
   // Write reports
   const jsonPath = path.join(options.outputDir, 'pratya-report.json');
   writeJsonReport(matrix, jsonPath);
-  writeHtmlReport(matrix, options.outputDir);
+  writeHtmlReport(matrix, options.outputDir, contract);
 
   const errorCount = matrix.violations.filter(v => v.severity === 'ERROR').length;
   const warnCount = matrix.violations.filter(v => v.severity === 'WARN').length;
@@ -117,4 +117,24 @@ export function finalizeReport(
   }
 
   return matrix;
+}
+
+/**
+ * Write trace entries to a JSON file. Used by test runner reporters
+ * to persist traces so that `pratya run` can generate the full report
+ * after the test process (and coverage) completes.
+ */
+export function writeTraces(traces: TraceEntry[], outputDir: string): void {
+  fs.mkdirSync(outputDir, { recursive: true });
+  const tracesPath = path.join(outputDir, 'pratya-traces.json');
+  fs.writeFileSync(tracesPath, JSON.stringify(traces, null, 2), 'utf-8');
+}
+
+/**
+ * Read trace entries written by a test runner reporter.
+ */
+export function readTraces(outputDir: string): TraceEntry[] {
+  const tracesPath = path.join(outputDir, 'pratya-traces.json');
+  if (!fs.existsSync(tracesPath)) return [];
+  return JSON.parse(fs.readFileSync(tracesPath, 'utf-8')) as TraceEntry[];
 }

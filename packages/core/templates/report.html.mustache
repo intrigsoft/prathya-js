@@ -1,168 +1,267 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pratya Coverage Report — {{moduleName}}</title>
-<style>
-  :root {
-    --green: #22c55e; --red: #ef4444; --grey: #9ca3af; --amber: #f59e0b;
-    --bg: #f8fafc; --card-bg: #ffffff; --text: #1e293b; --border: #e2e8f0;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; padding: 2rem; }
-  .container { max-width: 1100px; margin: 0 auto; }
-  h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
-  .subtitle { color: var(--grey); font-size: 0.875rem; margin-bottom: 1.5rem; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prathya Report — {{moduleName}}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #333; background: #f8f9fa; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+        header { background: #2c3e50; color: #fff; padding: 24px 0; margin-bottom: 24px; }
+        header .container { display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 1.5rem; }
+        header .timestamp { font-size: 0.85rem; opacity: 0.8; }
 
-  /* Summary card */
-  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-  .metric-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; }
-  .metric-card .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--grey); }
-  .metric-card .value { font-size: 2rem; font-weight: 700; }
+        /* Summary cards */
+        .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .summary-card { background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; position: relative; }
+        .summary-card .value { font-size: 2rem; font-weight: 700; color: #2c3e50; }
+        .summary-card .label { font-size: 0.85rem; color: #777; margin-top: 4px; }
+        .summary-card .sub-label { font-size: 0.75rem; color: #999; margin-top: 2px; }
+        .info-icon { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: #dee2e6; color: #555; font-size: 0.65rem; font-weight: 700; cursor: help; position: absolute; top: 10px; right: 10px; font-style: normal; }
+        .info-icon:hover + .info-tooltip, .info-tooltip:hover { opacity: 1; visibility: visible; }
+        .info-tooltip { position: absolute; top: 32px; right: 0; background: #2c3e50; color: #fff; padding: 10px 14px; border-radius: 6px; font-size: 0.78rem; line-height: 1.5; text-align: left; width: 260px; z-index: 10; opacity: 0; visibility: hidden; transition: opacity 0.15s, visibility 0.15s; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 
-  /* Quadrant badge */
-  .quadrant-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 600; margin-bottom: 1.5rem; }
-  .quadrant-healthy { background: #dcfce7; color: #166534; }
-  .quadrant-warn { background: #fef9c3; color: #854d0e; }
-  .quadrant-danger { background: #fee2e2; color: #991b1b; }
-  .quadrant-good { background: #dcfce7; color: #166534; }
+        /* Badges */
+        .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; }
+        .badge.covered { background: #d4edda; color: #155724; }
+        .badge.uncovered { background: #f8d7da; color: #721c24; }
+        .badge.inactive { background: #e2e3e5; color: #6c757d; }
+        .badge.passing { background: #d4edda; color: #155724; }
+        .badge.failing { background: #f8d7da; color: #721c24; }
+        .badge.not-covered { background: #e2e3e5; color: #6c757d; }
+        .badge.cc-count { background: #e8eaf6; color: #3949ab; font-size: 0.75rem; }
+        .badge.status-approved { background: #e2e3e5; color: #6c757d; }
+        .badge.status-draft { background: #e0e7ff; color: #3730a3; }
+        .badge.status-deprecated { background: #e2e3e5; color: #6c757d; text-decoration: line-through; }
+        .badge.status-superseded { background: #fff3cd; color: #856404; }
+        .badge.severity-error { background: #f8d7da; color: #721c24; }
+        .badge.severity-warn { background: #fff3cd; color: #856404; }
 
-  /* Table */
-  table { width: 100%; border-collapse: collapse; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 2rem; }
-  th { background: #f1f5f9; text-align: left; padding: 0.75rem 1rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
-  td { padding: 0.75rem 1rem; border-top: 1px solid var(--border); font-size: 0.875rem; }
-  tr:hover { background: #f8fafc; }
+        /* Requirement cards */
+        .req-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 16px; overflow: hidden; }
+        .req-card details > summary { list-style: none; cursor: pointer; }
+        .req-card details > summary::-webkit-details-marker { display: none; }
+        .req-header { display: flex; align-items: baseline; gap: 12px; padding: 14px 20px; border-bottom: 1px solid #eee; }
+        .req-card details:not([open]) .req-header { border-bottom: none; }
+        .req-header:hover { background: #f0f4f8; }
+        .req-id { font-size: 1rem; font-weight: 700; color: #2c3e50; }
+        .req-id::before { content: "\25B6"; font-size: 0.65rem; margin-right: 6px; color: #999; display: inline-block; transition: transform 0.15s; }
+        .req-card details[open] .req-id::before { transform: rotate(90deg); }
+        .req-title { font-size: 0.95rem; color: #555; flex: 1; }
+        .req-badges { display: flex; gap: 6px; align-items: center; }
+        .req-body { padding: 16px 20px; }
 
-  /* Status badges */
-  .badge { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
-  .badge.approved { background: #dcfce7; color: #166534; }
-  .badge.draft { background: #e0e7ff; color: #3730a3; }
-  .badge.deprecated { background: #f3f4f6; color: #6b7280; text-decoration: line-through; }
-  .badge.superseded { background: #fef9c3; color: #854d0e; }
+        /* Expand/collapse controls */
+        .expand-controls { margin-bottom: 12px; display: flex; gap: 8px; }
+        .expand-controls button { background: #fff; border: 1px solid #dee2e6; border-radius: 6px; padding: 6px 14px; font-size: 0.82rem; color: #555; cursor: pointer; }
+        .expand-controls button:hover { background: #f0f4f8; border-color: #adb5bd; }
 
-  .badge.passing { background: #dcfce7; color: #166534; }
-  .badge.failing { background: #fee2e2; color: #991b1b; }
-  .badge.not-covered { background: #f3f4f6; color: #6b7280; }
+        /* Requirement body */
+        .req-description { font-size: 0.9rem; color: #444; line-height: 1.5; margin-bottom: 12px; }
+        .req-section-label { font-size: 0.8rem; font-weight: 600; color: #777; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; margin-top: 12px; }
+        .acceptance-criteria { padding-left: 20px; font-size: 0.85rem; color: #555; line-height: 1.6; }
+        .acceptance-criteria li { margin: 2px 0; }
 
-  /* Expandable details */
-  details { margin-top: 0.5rem; }
-  details summary { cursor: pointer; font-size: 0.8rem; color: #6366f1; }
-  details .detail-content { padding: 0.75rem; background: #f8fafc; border-radius: 4px; margin-top: 0.5rem; font-size: 0.8rem; }
-  .test-row { padding: 0.25rem 0; border-bottom: 1px solid var(--border); }
-  .test-row:last-child { border-bottom: none; }
-  .cc-row { padding: 0.25rem 0; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); }
-  .cc-row:last-child { border-bottom: none; }
+        /* Version info */
+        .version-info { font-size: 0.8rem; color: #999; margin-bottom: 12px; }
+        .version-info span { font-weight: 600; color: #555; }
 
-  /* Violations */
-  .violations { margin-bottom: 2rem; }
-  .violation-group { margin-bottom: 1rem; }
-  .violation-group h3 { font-size: 0.875rem; margin-bottom: 0.5rem; }
-  .violation { padding: 0.5rem 0.75rem; border-left: 3px solid; margin-bottom: 0.25rem; font-size: 0.8rem; background: var(--card-bg); }
-  .violation.error { border-color: var(--red); }
-  .violation.warn { border-color: var(--amber); }
-</style>
+        /* Test list */
+        .test-list { list-style: none; padding: 0; }
+        .test-list li { font-size: 0.82rem; padding: 3px 0; font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; color: #155724; }
+        .test-list li .test-version { color: #999; font-size: 0.75rem; margin-left: 4px; }
+        .no-tests { font-size: 0.85rem; color: #999; font-style: italic; }
+
+        /* Corner cases */
+        .cc-list { margin-top: 4px; }
+        .cc-item { border-left: 3px solid #dee2e6; margin-bottom: 8px; padding: 8px 12px; background: #f8f9fa; border-radius: 0 6px 6px 0; }
+        .cc-item.cc-covered { border-left-color: #28a745; }
+        .cc-item.cc-uncovered { border-left-color: #dc3545; }
+        .cc-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+        .cc-id { font-size: 0.85rem; font-weight: 600; color: #2c3e50; }
+        .cc-description { font-size: 0.85rem; color: #555; }
+
+        /* Inline violations on cards */
+        .req-violations { margin-top: 12px; }
+        .req-violation { display: flex; align-items: baseline; gap: 8px; padding: 6px 10px; border-radius: 6px; margin-bottom: 4px; font-size: 0.83rem; }
+        .req-violation.error { background: #f8d7da; color: #721c24; }
+        .req-violation.warn { background: #fff3cd; color: #856404; }
+        .req-violation .severity-tag { font-weight: 700; text-transform: uppercase; font-size: 0.75rem; }
+
+        /* Global violations */
+        .violations { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 20px; margin-bottom: 24px; }
+        .violations h2 { color: #856404; margin-bottom: 12px; font-size: 1.1rem; }
+        .violations table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; margin-bottom: 0; box-shadow: none; }
+        .violations th { background: #856404; color: #fff; text-align: left; padding: 12px 16px; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; }
+        .violations td { padding: 10px 16px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        .violations tr:last-child td { border-bottom: none; }
+
+        footer { text-align: center; padding: 20px; font-size: 0.8rem; color: #999; }
+
+        /* Print styles */
+        @media print {
+            body { background: #fff; }
+            header { background: #2c3e50 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .expand-controls { display: none; }
+            .req-card details { open: true; }
+            .req-card details > summary { pointer-events: none; }
+            .req-card { break-inside: avoid; box-shadow: none; border: 1px solid #dee2e6; }
+            .summary-card { box-shadow: none; border: 1px solid #dee2e6; }
+            .badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .cc-item { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+    </style>
 </head>
 <body>
-<div class="container">
-  <h1>Pratya Coverage Report</h1>
-  <p class="subtitle">{{moduleId}} — {{moduleName}} &middot; Generated {{generatedAt}}</p>
+    <header>
+        <div class="container">
+            <h1>Prathya &mdash; {{moduleName}}</h1>
+            <span class="timestamp">Generated: {{generatedAt}}</span>
+        </div>
+    </header>
 
-  <span class="quadrant-badge {{quadrantClass}}">{{quadrantLabel}}</span>
-
-  <div class="summary">
-    <div class="metric-card">
-      <div class="label">Requirement Coverage</div>
-      <div class="value">{{requirementCoverage}}%</div>
-    </div>
-    <div class="metric-card">
-      <div class="label">Corner Case Coverage</div>
-      <div class="value">{{cornerCaseCoverage}}%</div>
-    </div>
-    {{#hasCodeCoverage}}
-    <div class="metric-card">
-      <div class="label">Code Coverage</div>
-      <div class="value">{{codeCoverage}}%</div>
-    </div>
-    {{/hasCodeCoverage}}
-  </div>
-
-  <table>
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Title</th>
-        <th>Version</th>
-        <th>Status</th>
-        <th>Coverage</th>
-        <th>Corner Cases</th>
-      </tr>
-    </thead>
-    <tbody>
-      {{#requirements}}
-      <tr>
-        <td><strong>{{id}}</strong></td>
-        <td>
-          {{title}}
-          <details>
-            <summary>{{tests.length}} test(s)</summary>
-            <div class="detail-content">
-              {{#hasTests}}
-              {{#tests}}
-              <div class="test-row">{{title}} <span style="color:var(--grey)">(v{{requirementVersionAtTest}})</span></div>
-              {{/tests}}
-              {{/hasTests}}
-              {{^hasTests}}
-              <em>No mapped tests</em>
-              {{/hasTests}}
-
-              {{#hasCornerCases}}
-              <hr style="margin: 0.5rem 0; border: none; border-top: 1px solid var(--border);">
-              <strong>Corner Cases</strong>
-              {{#cornerCases}}
-              <div class="cc-row">
-                <span>{{id}}</span>
-                <span class="badge {{passingClass}}">{{passingLabel}}</span>
-              </div>
-              {{/cornerCases}}
-              {{/hasCornerCases}}
+    <div class="container">
+        <div class="summary">
+            <div class="summary-card">
+                <span class="info-icon">i</span>
+                <div class="info-tooltip">Percentage of approved requirements that have at least one test mapped via requirement(). Covers {{coveredReqCount}}/{{activeReqCount}} requirements and {{coveredCcCount}}/{{totalCcCount}} corner cases.</div>
+                <div class="value">{{requirementCoverage}}%</div>
+                <div class="label">Contract Coverage</div>
+                <div class="sub-label">{{coveredItemCount}} / {{totalItemCount}} items</div>
             </div>
-          </details>
-        </td>
-        <td>{{version}}</td>
-        <td><span class="badge {{statusClass}}">{{status}}</span></td>
-        <td><span class="badge {{passingClass}}">{{passingLabel}}</span></td>
-        <td>{{#hasCornerCases}}{{cornerCases.length}} case(s){{/hasCornerCases}}{{^hasCornerCases}}&mdash;{{/hasCornerCases}}</td>
-      </tr>
-      {{/requirements}}
-    </tbody>
-  </table>
+            <div class="summary-card">
+                <span class="info-icon">i</span>
+                <div class="info-tooltip">Percentage of corner cases for approved requirements that have at least one mapped test. Low corner case coverage may indicate missing edge-case tests.</div>
+                <div class="value">{{cornerCaseCoverage}}%</div>
+                <div class="label">Corner Case Coverage</div>
+                <div class="sub-label">{{coveredCcCount}} / {{totalCcCount}} cases</div>
+            </div>
+            {{#hasCodeCoverage}}
+            <div class="summary-card">
+                <span class="info-icon">i</span>
+                <div class="info-tooltip">Percentage of executable lines covered by tests (from Istanbul/V8). High line coverage with low requirement coverage may indicate undocumented features or dead code.</div>
+                <div class="value">{{codeCoverage}}%</div>
+                <div class="label">Line Coverage</div>
+            </div>
+            {{/hasCodeCoverage}}
+        </div>
 
-  {{#hasErrors}}
-  <div class="violations">
-    <div class="violation-group">
-      <h3>Errors</h3>
-      {{#errorViolations}}
-      <div class="violation error">{{message}}</div>
-      {{/errorViolations}}
+        {{#hasViolations}}
+        <div class="violations">
+            <h2>Violations ({{violationCount}})</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Severity</th>
+                        <th>Type</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#allViolations}}
+                    <tr>
+                        <td><span class="badge severity-{{severityLower}}">{{severity}}</span></td>
+                        <td>{{type}}</td>
+                        <td>{{message}}</td>
+                    </tr>
+                    {{/allViolations}}
+                </tbody>
+            </table>
+        </div>
+        {{/hasViolations}}
+
+        <div class="expand-controls">
+            <button onclick="document.querySelectorAll('.req-card details').forEach(d=>d.open=true)">Expand All</button>
+            <button onclick="document.querySelectorAll('.req-card details').forEach(d=>d.open=false)">Collapse All</button>
+            <button onclick="window.print()">Print</button>
+        </div>
+
+        {{#requirements}}
+        <div class="req-card">
+            <details>
+                <summary>
+                    <div class="req-header">
+                        <span class="req-id">{{id}}</span>
+                        <span class="req-title">{{title}}</span>
+                        <div class="req-badges">
+                            <span class="badge status-{{status}}">{{status}}</span>
+                            <span class="badge {{coverageBadgeClass}}">{{coverageBadgeLabel}}</span>
+                            {{#hasCornerCases}}
+                            <span class="badge cc-count">CC {{coveredCcCount}}/{{totalCcCount}}</span>
+                            {{/hasCornerCases}}
+                        </div>
+                    </div>
+                </summary>
+                <div class="req-body">
+                    {{#description}}
+                    <div class="req-description">{{description}}</div>
+                    {{/description}}
+
+                    <div class="version-info">Version: <span>{{version}}</span></div>
+
+                    {{#hasAcceptanceCriteria}}
+                    <div class="req-section-label">Acceptance Criteria</div>
+                    <ol class="acceptance-criteria">
+                        {{#acceptanceCriteria}}
+                        <li>{{.}}</li>
+                        {{/acceptanceCriteria}}
+                    </ol>
+                    {{/hasAcceptanceCriteria}}
+
+                    <div class="req-section-label">Tests ({{testCount}})</div>
+                    {{#hasTests}}
+                    <ul class="test-list">
+                        {{#tests}}
+                        <li>{{title}} <span class="test-version">v{{requirementVersionAtTest}}</span></li>
+                        {{/tests}}
+                    </ul>
+                    {{/hasTests}}
+                    {{^hasTests}}
+                    <div class="no-tests">No mapped tests</div>
+                    {{/hasTests}}
+
+                    {{#hasCornerCases}}
+                    <div class="req-section-label">Corner Cases</div>
+                    <div class="cc-list">
+                        {{#cornerCases}}
+                        <div class="cc-item {{ccCoveredClass}}">
+                            <div class="cc-header">
+                                <span class="cc-id">{{id}}</span>
+                                <span class="badge {{ccBadgeClass}}">{{ccBadgeLabel}}</span>
+                            </div>
+                            <div class="cc-description">{{description}}</div>
+                        </div>
+                        {{/cornerCases}}
+                    </div>
+                    {{/hasCornerCases}}
+
+                    {{#hasReqViolations}}
+                    <div class="req-violations">
+                        {{#reqViolations}}
+                        <div class="req-violation {{severityLower}}">
+                            <span class="severity-tag">{{severity}}</span>
+                            {{message}}
+                        </div>
+                        {{/reqViolations}}
+                    </div>
+                    {{/hasReqViolations}}
+                </div>
+            </details>
+        </div>
+        {{/requirements}}
     </div>
-  </div>
-  {{/hasErrors}}
 
-  {{#hasWarnings}}
-  <div class="violations">
-    <div class="violation-group">
-      <h3>Warnings</h3>
-      {{#warnViolations}}
-      <div class="violation warn">{{message}}</div>
-      {{/warnViolations}}
-    </div>
-  </div>
-  {{/hasWarnings}}
+    <footer>
+        Generated by Prathya
+    </footer>
 
-  <p style="text-align: center; color: var(--grey); font-size: 0.75rem; margin-top: 2rem;">
-    Generated by <a href="https://github.com/intrigsoft/pratya" style="color: #6366f1;">Pratya</a>
-  </p>
-</div>
+    <script>
+        // Auto-expand all for print
+        window.addEventListener('beforeprint', function() {
+            document.querySelectorAll('.req-card details').forEach(function(d) { d.open = true; });
+        });
+    </script>
 </body>
 </html>

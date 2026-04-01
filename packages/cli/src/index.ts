@@ -30,11 +30,26 @@ program
 
 program
   .command('run')
-  .description('Run contract tests via Playwright')
+  .description('Run contract tests and generate coverage report')
   .option('--contract <path>', 'Path to CONTRACT.yaml', './CONTRACT.yaml')
   .option('--requirement <id>', 'Run tests for a specific requirement')
+  .option('--runner <type>', 'Test runner: vitest, playwright, jest', 'vitest')
+  .option('--output-dir <path>', 'Output directory for reports', './pratya-report')
+  .option('--coverage', 'Enable code coverage collection')
+  .option('--coverage-summary <path>', 'Path to Istanbul coverage-summary.json')
+  .option('--fail-on-violations', 'Exit 1 if any ERROR violations')
+  .option('--min-coverage <n>', 'Minimum requirement coverage threshold (0-100)', '0')
   .action(async (opts) => {
-    await runCommand({ contract: opts.contract, requirement: opts.requirement });
+    await runCommand({
+      contract: opts.contract,
+      requirement: opts.requirement,
+      runner: opts.runner,
+      outputDir: opts.outputDir,
+      coverage: opts.coverage,
+      coverageSummary: opts.coverageSummary,
+      failOnViolations: opts.failOnViolations,
+      minimumRequirementCoverage: parseInt(opts.minCoverage, 10),
+    });
   });
 
 program

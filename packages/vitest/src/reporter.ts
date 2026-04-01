@@ -2,6 +2,7 @@ import {
   parseContract,
   finalizeReport,
   resolveReporterOptions,
+  writeTraces,
 } from '@pratya/core';
 import type {
   RequirementStatus,
@@ -17,6 +18,15 @@ export interface PratyaVitestReporterOptions {
   minimumRequirementCoverage?: number;
   excludeStatuses?: RequirementStatus[];
   codeCoverage?: { summaryPath: string };
+  /**
+   * When true (default), the reporter only writes trace entries to
+   * `pratya-traces.json` and defers report generation to `pratya run`.
+   * This allows code coverage data (written after reporters finish)
+   * to be included in the final report.
+   *
+   * Set to false to generate the full report inline (legacy behaviour).
+   */
+  deferReport?: boolean;
 }
 
 function toTestResult(state?: string): TestResult {
@@ -28,7 +38,7 @@ function toTestResult(state?: string): TestResult {
   }
 }
 
-// Minimal type definitions for Vitest reporter API to avoid dependency on @vitest/runner
+// Minimal type definitions for Vitest reporter API
 interface VitestTask {
   type: string;
   name: string;
@@ -57,8 +67,10 @@ function collectTests(tasks: VitestTask[]): VitestTask[] {
 
 class PratyaVitestReporter {
   private options: IntegrationReporterOptions;
+  private deferReport: boolean;
 
   constructor(options?: PratyaVitestReporterOptions) {
+    this.deferReport = options?.deferReport ?? true;
     this.options = resolveReporterOptions({
       contractPath: options?.contractPath,
       outputDir: options?.outputDir,
@@ -72,6 +84,19 @@ class PratyaVitestReporter {
   onFinished(files?: VitestFile[]): void {
     if (!files || files.length === 0) return;
 
+    const traces = this.collectTraces(files);
+
+    if (this.deferReport) {
+      // Write traces only — `pratya run` will generate the report after coverage is available
+      writeTraces(traces, this.options.outputDir);
+      console.log(`\n[pratya] ${traces.length} trace(s) collected → ${this.options.outputDir}/pratya-traces.json`);
+    } else {
+      // Legacy: generate report inline (no code coverage available at this point)
+      finalizeReport(traces, this.options);
+    }
+  }
+
+  private collectTraces(files: VitestFile[]): TraceEntry[] {
     const traces: TraceEntry[] = [];
 
     let contract;
@@ -110,7 +135,7 @@ class PratyaVitestReporter {
       }
     }
 
-    finalizeReport(traces, this.options);
+    return traces;
   }
 }
 

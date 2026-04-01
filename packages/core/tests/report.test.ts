@@ -115,13 +115,12 @@ describe('writeHtmlReport', () => {
     writeHtmlReport(matrix, tmpDir);
 
     const html = fs.readFileSync(path.join(tmpDir, 'index.html'), 'utf-8');
-    expect(html).toContain('Pratya Coverage Report');
+    expect(html).toContain('Prathya');
     expect(html).toContain('AUTH-001');
     expect(html).toContain('AUTH-002');
     expect(html).toContain('AUTH-005');
     expect(html).toContain('66.7%');
     expect(html).toContain('73.2%');
-    expect(html).toContain('Errors');
-    expect(html).toContain('Warnings');
+    expect(html).toContain('Violations');
   });
 });

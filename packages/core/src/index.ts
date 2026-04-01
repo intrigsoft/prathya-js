@@ -32,5 +32,21 @@ export {
   finalizeReport,
   resolveReporterOptions,
   DEFAULT_REPORTER_OPTIONS,
+  writeTraces,
+  readTraces,
 } from './reporter-utils.js';
 export type { IntegrationReporterOptions } from './reporter-utils.js';
+export {
+  addRequirement,
+  updateRequirement,
+  addCornerCase,
+  updateCornerCase,
+  deprecateRequirement,
+  supersedeRequirement,
+} from './mutator.js';
+export type {
+  AddRequirementInput,
+  UpdateRequirementInput,
+  AddCornerCaseInput,
+  UpdateCornerCaseInput,
+} from './mutator.js';

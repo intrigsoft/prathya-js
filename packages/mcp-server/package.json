@@ -1,0 +1,25 @@
+{
+  "name": "@pratya/mcp-server",
+  "version": "0.1.0",
+  "description": "MCP server for Pratya requirement coverage framework",
+  "type": "module",
+  "bin": {
+    "pratya-mcp": "./dist/index.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@pratya/core": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "js-yaml": "^4.1.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.0.0"
+  },
+  "license": "Apache-2.0"
+}
