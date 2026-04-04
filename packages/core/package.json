@@ -1,6 +1,6 @@
 {
   "name": "@intrigsoft/pratya-core",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Requirement coverage and traceability engine for Contract-Driven Development",
   "type": "module",
   "main": "./dist/index.cjs",
