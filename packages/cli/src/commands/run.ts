@@ -3,8 +3,8 @@ import {
   readTraces,
   finalizeReport,
   resolveReporterOptions,
-} from '@pratya/core';
-import type { RequirementStatus } from '@pratya/core';
+} from '@intrigsoft/pratya-core';
+import type { RequirementStatus } from '@intrigsoft/pratya-core';
 import { execa } from 'execa';
 
 export interface RunOptions {

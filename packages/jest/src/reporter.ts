@@ -4,13 +4,13 @@ import {
   parseContract,
   finalizeReport,
   resolveReporterOptions,
-} from '@pratya/core';
+} from '@intrigsoft/pratya-core';
 import type {
   RequirementStatus,
   TraceEntry,
   TestResult,
   IntegrationReporterOptions,
-} from '@pratya/core';
+} from '@intrigsoft/pratya-core';
 
 export interface PratyaJestReporterOptions {
   contractPath?: string;

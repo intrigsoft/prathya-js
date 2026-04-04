@@ -1,5 +1,5 @@
 {
-  "name": "@pratya/core",
+  "name": "@intrigsoft/pratya-core",
   "version": "0.1.0",
   "description": "Requirement coverage and traceability engine for Contract-Driven Development",
   "type": "module",
@@ -26,7 +26,7 @@
     "mustache": "^4.2.0"
   },
   "devDependencies": {
-    "@pratya/vitest": "workspace:*",
+    "@intrigsoft/pratya-vitest": "workspace:*",
     "@vitest/coverage-v8": "^1.6.0",
     "@types/js-yaml": "^4.0.9",
     "@types/mustache": "^4.2.5",

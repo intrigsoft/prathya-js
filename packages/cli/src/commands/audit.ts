@@ -4,7 +4,7 @@ import {
   audit,
   type CoverageMatrix,
   type Violation,
-} from '@pratya/core';
+} from '@intrigsoft/pratya-core';
 
 export function auditCommand(options: {
   contract: string;

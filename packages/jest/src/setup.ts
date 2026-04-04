@@ -31,7 +31,7 @@ const jestAfterEach = (globalThis as Record<string, unknown>).afterEach as
   | undefined;
 
 if (!jestAfterEach) {
-  throw new Error('@pratya/jest/setup must be loaded as a Jest setupFilesAfterFramework entry');
+  throw new Error('@intrigsoft/pratya-jest/setup must be loaded as a Jest setupFilesAfterFramework entry');
 }
 
 jestAfterEach(() => {

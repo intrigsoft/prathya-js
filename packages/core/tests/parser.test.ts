@@ -1,5 +1,5 @@
 import { describe } from 'vitest';
-import { test, expect } from '@pratya/vitest';
+import { test, expect } from '@intrigsoft/pratya-vitest';
 import * as path from 'node:path';
 import { parseContract, parseContractYaml } from '../src/parser.js';
 

@@ -1,5 +1,5 @@
 import { describe } from 'vitest';
-import { test, expect } from '@pratya/vitest';
+import { test, expect } from '@intrigsoft/pratya-vitest';
 import * as path from 'node:path';
 import { parseContract } from '../src/parser.js';
 import { audit, ORPHAN_ANNOTATION, UNCOVERED_REQUIREMENT, UNCOVERED_CORNER_CASE, DEPRECATED_REFERENCE, SUPERSEDED_REFERENCE, BROKEN_SUPERSESSION, STALE_REQUIREMENT_VERSION } from '../src/audit.js';

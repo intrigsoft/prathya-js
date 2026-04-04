@@ -1,4 +1,4 @@
-import type { RequirementStatus } from '@pratya/core';
+import type { RequirementStatus } from '@intrigsoft/pratya-core';
 
 export interface PratyaVitestReporterOptions {
   contractPath?: string;

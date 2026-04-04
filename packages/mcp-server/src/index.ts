@@ -12,8 +12,8 @@ import {
   updateCornerCase,
   deprecateRequirement,
   supersedeRequirement,
-} from '@pratya/core';
-import type { ModuleContract, Requirement, TraceEntry } from '@pratya/core';
+} from '@intrigsoft/pratya-core';
+import type { ModuleContract, Requirement, TraceEntry } from '@intrigsoft/pratya-core';
 
 const DEFAULT_CONTRACT = './CONTRACT.yaml';
 
@@ -291,7 +291,7 @@ server.tool(
     if (r === 'vitest') {
       lines.push(
         '```bash',
-        'npm install -D @pratya/vitest @pratya/core pratya',
+        'npm install -D @intrigsoft/pratya-vitest @intrigsoft/pratya-core @intrigsoft/pratya',
         '```',
         '',
         '## 2. Create CONTRACT.yaml',
@@ -332,7 +332,7 @@ server.tool(
         '    },',
         '    reporters: [',
         "      'default',",
-        "      ['@pratya/vitest/reporter', {",
+        "      ['@intrigsoft/pratya-vitest/reporter', {",
         "        contractPath: './CONTRACT.yaml',",
         "        outputDir: './pratya-report',",
         '      }],',
@@ -344,7 +344,7 @@ server.tool(
         '## 4. Annotate tests',
         '',
         '```typescript',
-        "import { test, expect } from '@pratya/vitest';",
+        "import { test, expect } from '@intrigsoft/pratya-vitest';",
         '',
         "test('my feature works', ({ requirement }) => {",
         "  requirement('MYAPP-001');",
@@ -361,7 +361,7 @@ server.tool(
     } else if (r === 'playwright') {
       lines.push(
         '```bash',
-        'npm install -D @pratya/playwright @pratya/core pratya',
+        'npm install -D @intrigsoft/pratya-playwright @intrigsoft/pratya-core @intrigsoft/pratya',
         '```',
         '',
         '## 2. Create CONTRACT.yaml (same as vitest)',
@@ -374,7 +374,7 @@ server.tool(
         'export default defineConfig({',
         '  reporter: [',
         "    ['list'],",
-        "    ['@pratya/playwright/reporter', {",
+        "    ['@intrigsoft/pratya-playwright/reporter', {",
         "      contractPath: './CONTRACT.yaml',",
         "      outputDir: './pratya-report',",
         '    }],',
@@ -385,7 +385,7 @@ server.tool(
         '## 4. Annotate tests',
         '',
         '```typescript',
-        "import { test, expect } from '@pratya/playwright';",
+        "import { test, expect } from '@intrigsoft/pratya-playwright';",
         '',
         "test('my e2e test', async ({ page, requirement }) => {",
         "  requirement('MYAPP-001');",
@@ -402,24 +402,24 @@ server.tool(
     } else {
       lines.push(
         '```bash',
-        'npm install -D @pratya/jest @pratya/core pratya',
+        'npm install -D @intrigsoft/pratya-jest @intrigsoft/pratya-core @intrigsoft/pratya',
         '```',
         '',
         '## 2. Configure jest.config.js',
         '',
         '```javascript',
         'module.exports = {',
-        "  reporters: ['default', ['@pratya/jest/reporter', {",
+        "  reporters: ['default', ['@intrigsoft/pratya-jest/reporter', {",
         "    contractPath: './CONTRACT.yaml',",
         '  }]],',
-        "  setupFilesAfterFramework: ['@pratya/jest/setup'],",
+        "  setupFilesAfterFramework: ['@intrigsoft/pratya-jest/setup'],",
         '};',
         '```',
         '',
         '## 3. Annotate tests',
         '',
         '```javascript',
-        "const { requirement } = require('@pratya/jest');",
+        "const { requirement } = require('@intrigsoft/pratya-jest');",
         '',
         "test('my test', () => {",
         "  requirement('MYAPP-001');",

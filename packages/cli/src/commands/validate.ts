@@ -1,4 +1,4 @@
-import { parseContract } from '@pratya/core';
+import { parseContract } from '@intrigsoft/pratya-core';
 
 export function validateCommand(contractPath: string): void {
   try {

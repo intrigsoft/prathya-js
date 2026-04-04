@@ -1,5 +1,5 @@
 {
-  "name": "@pratya/vitest",
+  "name": "@intrigsoft/pratya-vitest",
   "version": "0.1.0",
   "description": "Vitest integration for Pratya requirement coverage",
   "type": "module",
@@ -24,7 +24,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@pratya/core": "workspace:*"
+    "@intrigsoft/pratya-core": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

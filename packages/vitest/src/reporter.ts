@@ -3,13 +3,13 @@ import {
   finalizeReport,
   resolveReporterOptions,
   writeTraces,
-} from '@pratya/core';
+} from '@intrigsoft/pratya-core';
 import type {
   RequirementStatus,
   TraceEntry,
   TestResult,
   IntegrationReporterOptions,
-} from '@pratya/core';
+} from '@intrigsoft/pratya-core';
 
 export interface PratyaVitestReporterOptions {
   contractPath?: string;

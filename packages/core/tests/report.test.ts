@@ -1,5 +1,5 @@
 import { describe, beforeEach, afterEach } from 'vitest';
-import { test, expect } from '@pratya/vitest';
+import { test, expect } from '@intrigsoft/pratya-vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';

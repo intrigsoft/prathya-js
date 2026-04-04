@@ -3,7 +3,7 @@
  *
  * Jest has no built-in annotation mechanism like Playwright's `testInfo.annotations`
  * or Vitest's `task.meta`. Annotations are stored in a global map keyed by test name
- * and flushed to disk by the setup module (`@pratya/jest/setup`) via `afterEach`.
+ * and flushed to disk by the setup module (`@intrigsoft/pratya-jest/setup`) via `afterEach`.
  */
 
 // Global storage for the current worker process

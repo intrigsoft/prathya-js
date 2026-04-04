@@ -1,5 +1,5 @@
 {
-  "name": "@pratya/playwright",
+  "name": "@intrigsoft/pratya-playwright",
   "version": "0.2.0",
   "description": "Playwright integration for Pratya requirement coverage",
   "type": "module",
@@ -24,7 +24,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@pratya/core": "workspace:*"
+    "@intrigsoft/pratya-core": "workspace:*"
   },
   "devDependencies": {
     "@playwright/test": "^1.40.0",

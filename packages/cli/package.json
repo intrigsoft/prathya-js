@@ -1,5 +1,5 @@
 {
-  "name": "pratya",
+  "name": "@intrigsoft/pratya",
   "version": "0.3.0",
   "description": "CLI for Pratya requirement coverage framework",
   "type": "module",
@@ -12,7 +12,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@pratya/core": "workspace:*",
+    "@intrigsoft/pratya-core": "workspace:*",
     "commander": "^12.0.0",
     "execa": "^9.0.0"
   },

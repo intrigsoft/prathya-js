@@ -9,7 +9,7 @@ export default defineConfig({
     },
     reporters: [
       'default',
-      ['@pratya/vitest/reporter', {
+      ['@intrigsoft/pratya-vitest/reporter', {
         contractPath: '../../CONTRACT.yaml',
         outputDir: './pratya-report',
       }],

@@ -1,5 +1,5 @@
 {
-  "name": "@pratya/jest",
+  "name": "@intrigsoft/pratya-jest",
   "version": "0.1.0",
   "description": "Jest integration for Pratya requirement coverage",
   "type": "module",
@@ -29,7 +29,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@pratya/core": "workspace:*"
+    "@intrigsoft/pratya-core": "workspace:*"
   },
   "devDependencies": {
     "@jest/reporters": "^29.0.0",
