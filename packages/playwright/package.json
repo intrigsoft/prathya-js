@@ -1,6 +1,6 @@
 {
   "name": "@intrigsoft/pratya-playwright",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Playwright integration for Pratya requirement coverage",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -18,7 +18,9 @@
       "require": "./dist/reporter.cjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "clean": "rm -rf dist"

@@ -1,12 +1,14 @@
 {
   "name": "@intrigsoft/pratya-mcp-server",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "MCP server for Pratya requirement coverage framework",
   "type": "module",
   "bin": {
     "pratya-mcp": "./dist/index.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "clean": "rm -rf dist"
