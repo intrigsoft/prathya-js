@@ -1,6 +1,6 @@
 {
   "name": "@intrigsoft/pratya-jest",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Jest integration for Pratya requirement coverage",
   "type": "module",
   "main": "./dist/index.cjs",
