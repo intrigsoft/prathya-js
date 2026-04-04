@@ -1,6 +1,6 @@
 {
   "name": "@intrigsoft/pratya-vitest",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Vitest integration for Pratya requirement coverage",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -18,7 +18,9 @@
       "require": "./dist/reporter.cjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup && cp src/index.d.ts dist/index.d.ts && cp src/reporter.d.ts dist/reporter.d.ts",
     "clean": "rm -rf dist"

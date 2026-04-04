@@ -1,6 +1,6 @@
 {
   "name": "@intrigsoft/pratya-jest",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Jest integration for Pratya requirement coverage",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -23,7 +23,9 @@
       "require": "./dist/setup.cjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "clean": "rm -rf dist"
