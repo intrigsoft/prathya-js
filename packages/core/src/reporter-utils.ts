@@ -5,14 +5,14 @@ import { computeCoverage } from './coverage.js';
 import { audit } from './audit.js';
 import { COVERAGE_BELOW_THRESHOLD } from './audit.js';
 import { writeHtmlReport, writeJsonReport } from './report.js';
-import type { TraceEntry, RequirementStatus, CoverageMatrix, ModuleContract } from './model.js';
+import type { TraceEntry, SpecStatus, CoverageMatrix, ModuleContract } from './model.js';
 
 export interface IntegrationReporterOptions {
   contractPath: string;
   outputDir: string;
   failOnViolations: boolean;
-  minimumRequirementCoverage: number;
-  excludeStatuses: RequirementStatus[];
+  minimumSpecCoverage: number;
+  excludeStatuses: SpecStatus[];
   codeCoverage?: { summaryPath: string };
 }
 
@@ -20,7 +20,7 @@ export const DEFAULT_REPORTER_OPTIONS: IntegrationReporterOptions = {
   contractPath: './CONTRACT.yaml',
   outputDir: './pratya-report',
   failOnViolations: false,
-  minimumRequirementCoverage: 0,
+  minimumSpecCoverage: 0,
   excludeStatuses: ['deprecated', 'superseded'],
 };
 
@@ -61,10 +61,11 @@ export function finalizeReport(
         moduleId: raw.module,
         moduleName: raw.module,
         generatedAt: raw.generatedAt,
-        requirementCoverage: raw.summary?.requirementCoverage ?? 0,
-        cornerCaseCoverage: raw.summary?.cornerCaseCoverage ?? 0,
+        specCoverage: raw.summary?.specCoverage ?? 0,
+        caseCoverage: raw.summary?.caseCoverage ?? 0,
+        passingCaseCoverage: raw.summary?.passingCaseCoverage ?? 0,
         codeCoverage: raw.summary?.codeCoverage,
-        requirements: raw.requirements ?? [],
+        specs: raw.specs ?? [],
         violations: raw.violations ?? [],
       };
     }
@@ -86,13 +87,13 @@ export function finalizeReport(
 
   // Check threshold
   if (
-    options.minimumRequirementCoverage > 0 &&
-    matrix.requirementCoverage < options.minimumRequirementCoverage
+    options.minimumSpecCoverage > 0 &&
+    matrix.specCoverage < options.minimumSpecCoverage
   ) {
     matrix.violations.push({
       severity: 'ERROR',
       type: COVERAGE_BELOW_THRESHOLD,
-      message: `Requirement coverage ${matrix.requirementCoverage}% is below the configured threshold of ${options.minimumRequirementCoverage}%`,
+      message: `Spec coverage ${matrix.specCoverage}% is below the configured threshold of ${options.minimumSpecCoverage}%`,
     });
   }
 
@@ -104,7 +105,7 @@ export function finalizeReport(
   const errorCount = matrix.violations.filter(v => v.severity === 'ERROR').length;
   const warnCount = matrix.violations.filter(v => v.severity === 'WARN').length;
 
-  console.log(`\n[pratya] Coverage: ${matrix.requirementCoverage}% requirements, ${matrix.cornerCaseCoverage}% corner cases`);
+  console.log(`\n[pratya] Coverage: ${matrix.specCoverage}% specs, ${matrix.caseCoverage}% cases (${matrix.passingCaseCoverage}% passing)`);
   if (matrix.codeCoverage !== undefined) {
     console.log(`[pratya] Code coverage: ${matrix.codeCoverage}%`);
   }

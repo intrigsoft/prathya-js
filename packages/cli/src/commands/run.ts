@@ -4,19 +4,19 @@ import {
   finalizeReport,
   resolveReporterOptions,
 } from '@intrigsoft/pratya-core';
-import type { RequirementStatus } from '@intrigsoft/pratya-core';
+import type { SpecStatus } from '@intrigsoft/pratya-core';
 import { execa } from 'execa';
 
 export interface RunOptions {
   contract: string;
-  requirement?: string;
+  spec?: string;
   runner: 'vitest' | 'playwright' | 'jest';
   outputDir: string;
   coverage?: boolean;
   coverageSummary?: string;
   failOnViolations?: boolean;
-  minimumRequirementCoverage?: number;
-  excludeStatuses?: RequirementStatus[];
+  minimumSpecCoverage?: number;
+  excludeStatuses?: SpecStatus[];
 }
 
 export async function runCommand(options: RunOptions): Promise<void> {
@@ -25,19 +25,19 @@ export async function runCommand(options: RunOptions): Promise<void> {
 
   // 1. Build the grep filter
   let filter: string | undefined;
-  if (options.requirement) {
-    filter = `@requirement:${options.requirement}`;
+  if (options.spec) {
+    filter = `@spec:${options.spec}`;
   } else {
-    const approvedIds = contract.requirements
+    const approvedIds = contract.specs
       .filter(r => r.status === 'approved')
       .map(r => r.id);
 
     if (approvedIds.length === 0) {
-      console.log('No approved requirements found in CONTRACT.yaml');
+      console.log('No approved specs found in CONTRACT.yaml');
       return;
     }
 
-    filter = `@requirement:(${approvedIds.join('|')})`;
+    filter = `@spec:(${approvedIds.join('|')})`;
   }
 
   // 2. Run the test suite
@@ -74,7 +74,7 @@ export async function runCommand(options: RunOptions): Promise<void> {
     contractPath: options.contract,
     outputDir: options.outputDir,
     failOnViolations: options.failOnViolations,
-    minimumRequirementCoverage: options.minimumRequirementCoverage,
+    minimumSpecCoverage: options.minimumSpecCoverage,
     excludeStatuses: options.excludeStatuses,
     codeCoverage: codeCoverageSummaryPath ? { summaryPath: codeCoverageSummaryPath } : undefined,
   });
@@ -120,7 +120,7 @@ function buildTestArgs(options: RunOptions, filter: string): string[] {
   switch (options.runner) {
     case 'vitest': {
       // Vitest doesn't support tag-based grep — run all tests,
-      // the reporter collects traces only from tests calling requirement()
+      // the reporter collects traces only from tests calling spec()
       const args = ['npx', 'vitest', 'run'];
       if (options.coverage) {
         args.push('--coverage');

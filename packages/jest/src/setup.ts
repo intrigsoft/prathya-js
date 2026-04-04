@@ -5,7 +5,7 @@ import { _getAnnotations, _clearAnnotations } from './index.js';
 /**
  * Jest setupFilesAfterFramework module.
  *
- * Installs an afterEach hook that flushes requirement annotations from the
+ * Installs an afterEach hook that flushes spec annotations from the
  * in-memory map to a JSON file on disk. The reporter reads these files in
  * onRunComplete to build TraceEntry[].
  *

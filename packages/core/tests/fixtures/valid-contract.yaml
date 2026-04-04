@@ -6,7 +6,7 @@ module:
   created: 2026-03-06
   version: 1.2.0
 
-requirements:
+specs:
   - id: AUTH-001
     version: 1.1.0
     status: approved
@@ -16,7 +16,7 @@ requirements:
     acceptance_criteria:
       - Valid credentials return a signed JWT access token and refresh token
       - Access token expiry is set to 15 minutes
-    corner_cases:
+    cases:
       - id: AUTH-001-CC-001
         description: Email valid but password incorrect — must return 401
       - id: AUTH-001-CC-002
@@ -40,7 +40,7 @@ requirements:
     acceptance_criteria:
       - Valid refresh token returns a new access token
       - Original refresh token is rotated
-    corner_cases:
+    cases:
       - id: AUTH-002-CC-001
         description: Refresh token used twice — second use must fail
     changelog:
@@ -57,7 +57,7 @@ requirements:
       The system must allow password reset via email link only.
     acceptance_criteria:
       - Reset link is valid for 30 minutes
-    corner_cases: []
+    cases: []
     changelog:
       - version: 1.0.0
         date: 2026-01-10
@@ -73,7 +73,7 @@ requirements:
     acceptance_criteria:
       - Reset link is valid for 15 minutes
       - If MFA is enabled, OTP verification required before reset
-    corner_cases:
+    cases:
       - id: AUTH-005-CC-001
         description: Reset link used after expiry — must return 410 Gone
       - id: AUTH-005-CC-002

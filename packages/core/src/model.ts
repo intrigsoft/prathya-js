@@ -1,8 +1,8 @@
-export type RequirementStatus = 'draft' | 'approved' | 'deprecated' | 'superseded';
+export type SpecStatus = 'draft' | 'approved' | 'deprecated' | 'superseded';
 export type TestResult = 'passed' | 'failed' | 'skipped';
 export type ViolationSeverity = 'ERROR' | 'WARN';
 
-export interface CornerCase {
+export interface Case {
   id: string;
   description: string;
 }
@@ -13,14 +13,14 @@ export interface ChangelogEntry {
   note: string;
 }
 
-export interface Requirement {
+export interface Spec {
   id: string;
   version: string;
-  status: RequirementStatus;
+  status: SpecStatus;
   title: string;
   description: string;
   acceptanceCriteria: string[];
-  cornerCases: CornerCase[];
+  cases: Case[];
   supersedes?: string;
   supersededBy?: string;
   changelog: ChangelogEntry[];
@@ -33,40 +33,40 @@ export interface ModuleContract {
   owner?: string;
   created: string;
   version: string;
-  requirements: Requirement[];
+  specs: Spec[];
 }
 
 export interface TraceEntry {
-  requirementIds: string[];
+  specIds: string[];
   testTitle: string;
   testFile: string;
-  requirementVersionAtTest?: Record<string, string>;
+  specVersionAtTest?: Record<string, string>;
   result?: TestResult;
 }
 
-export interface CornerCaseCoverage {
+export interface CaseCoverage {
   id: string;
   covered: boolean;
   passing: boolean | null;
 }
 
-export interface RequirementCoverage {
+export interface SpecCoverage {
   id: string;
   title: string;
   version: string;
-  status: RequirementStatus;
+  status: SpecStatus;
   covered: boolean;
   passing: boolean | null;
-  tests: Array<{ title: string; requirementVersionAtTest: string }>;
-  cornerCases: CornerCaseCoverage[];
+  tests: Array<{ title: string; specVersionAtTest: string }>;
+  cases: CaseCoverage[];
   codeCoveragePercent?: number;
 }
 
 export interface Violation {
   severity: ViolationSeverity;
   type: string;
-  requirementId?: string;
-  cornerCaseId?: string;
+  specId?: string;
+  caseId?: string;
   testTitle?: string;
   message: string;
 }
@@ -75,9 +75,10 @@ export interface CoverageMatrix {
   moduleId: string;
   moduleName: string;
   generatedAt: string;
-  requirementCoverage: number;
-  cornerCaseCoverage: number;
+  specCoverage: number;
+  caseCoverage: number;
+  passingCaseCoverage: number;
   codeCoverage?: number;
-  requirements: RequirementCoverage[];
+  specs: SpecCoverage[];
   violations: Violation[];
 }

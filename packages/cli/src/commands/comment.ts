@@ -18,12 +18,13 @@ export function commentCommand(reportPath: string): void {
   }
 
   const lines: string[] = [
-    '## Pratya Requirement Coverage',
+    '## Pratya Spec Coverage',
     '',
     '| Metric | Value |',
     '|---|---|',
-    `| Requirement Coverage | ${summary.requirementCoverage}% (${summary.coveredRequirements}/${summary.activeRequirements}) |`,
-    `| Corner Case Coverage | ${summary.cornerCaseCoverage}% (${summary.coveredCornerCases}/${summary.totalCornerCases}) |`,
+    `| Spec Coverage | ${summary.specCoverage}% (${summary.coveredSpecs}/${summary.activeSpecs}) |`,
+    `| Case Coverage | ${summary.caseCoverage}% (${summary.coveredCases}/${summary.totalCases}) |`,
+    `| Passing Case Coverage | ${summary.passingCaseCoverage}% |`,
   ];
 
   if (summary.codeCoverage !== undefined) {

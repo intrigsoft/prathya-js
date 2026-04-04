@@ -39,7 +39,7 @@
         .badge.severity-error { background: #f8d7da; color: #721c24; }
         .badge.severity-warn { background: #fff3cd; color: #856404; }
 
-        /* Requirement cards */
+        /* Spec cards */
         .req-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 16px; overflow: hidden; }
         .req-card details > summary { list-style: none; cursor: pointer; }
         .req-card details > summary::-webkit-details-marker { display: none; }
@@ -58,7 +58,7 @@
         .expand-controls button { background: #fff; border: 1px solid #dee2e6; border-radius: 6px; padding: 6px 14px; font-size: 0.82rem; color: #555; cursor: pointer; }
         .expand-controls button:hover { background: #f0f4f8; border-color: #adb5bd; }
 
-        /* Requirement body */
+        /* Spec body */
         .req-description { font-size: 0.9rem; color: #444; line-height: 1.5; margin-bottom: 12px; }
         .req-section-label { font-size: 0.8rem; font-weight: 600; color: #777; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; margin-top: 12px; }
         .acceptance-criteria { padding-left: 20px; font-size: 0.85rem; color: #555; line-height: 1.6; }
@@ -74,7 +74,7 @@
         .test-list li .test-version { color: #999; font-size: 0.75rem; margin-left: 4px; }
         .no-tests { font-size: 0.85rem; color: #999; font-style: italic; }
 
-        /* Corner cases */
+        /* Cases */
         .cc-list { margin-top: 4px; }
         .cc-item { border-left: 3px solid #dee2e6; margin-bottom: 8px; padding: 8px 12px; background: #f8f9fa; border-radius: 0 6px 6px 0; }
         .cc-item.cc-covered { border-left-color: #28a745; }
@@ -126,22 +126,29 @@
         <div class="summary">
             <div class="summary-card">
                 <span class="info-icon">i</span>
-                <div class="info-tooltip">Percentage of approved requirements that have at least one test mapped via requirement(). Covers {{coveredReqCount}}/{{activeReqCount}} requirements and {{coveredCcCount}}/{{totalCcCount}} corner cases.</div>
-                <div class="value">{{requirementCoverage}}%</div>
-                <div class="label">Contract Coverage</div>
-                <div class="sub-label">{{coveredItemCount}} / {{totalItemCount}} items</div>
+                <div class="info-tooltip">Percentage of approved specs that have at least one test mapped via spec(). Covers {{coveredSpecCount}}/{{activeSpecCount}} specs.</div>
+                <div class="value">{{specCoverage}}%</div>
+                <div class="label">Spec Coverage</div>
+                <div class="sub-label">{{coveredSpecCount}} / {{activeSpecCount}} specs</div>
             </div>
             <div class="summary-card">
                 <span class="info-icon">i</span>
-                <div class="info-tooltip">Percentage of corner cases for approved requirements that have at least one mapped test. Low corner case coverage may indicate missing edge-case tests.</div>
-                <div class="value">{{cornerCaseCoverage}}%</div>
-                <div class="label">Corner Case Coverage</div>
-                <div class="sub-label">{{coveredCcCount}} / {{totalCcCount}} cases</div>
+                <div class="info-tooltip">Percentage of cases that have at least one mapped test. Low case coverage may indicate missing edge-case tests.</div>
+                <div class="value">{{caseCoverage}}%</div>
+                <div class="label">Case Coverage</div>
+                <div class="sub-label">{{coveredCaseCount}} / {{totalCaseCount}} cases</div>
+            </div>
+            <div class="summary-card">
+                <span class="info-icon">i</span>
+                <div class="info-tooltip">Percentage of cases where all linked tests pass. Shows how many cases are actually verified green.</div>
+                <div class="value">{{passingCaseCoverage}}%</div>
+                <div class="label">Passing Cases</div>
+                <div class="sub-label">{{passingCaseCount}} / {{totalCaseCount}} cases passing</div>
             </div>
             {{#hasCodeCoverage}}
             <div class="summary-card">
                 <span class="info-icon">i</span>
-                <div class="info-tooltip">Percentage of executable lines covered by tests (from Istanbul/V8). High line coverage with low requirement coverage may indicate undocumented features or dead code.</div>
+                <div class="info-tooltip">Percentage of executable lines covered by tests (from Istanbul/V8). High line coverage with low spec coverage may indicate undocumented features or dead code.</div>
                 <div class="value">{{codeCoverage}}%</div>
                 <div class="label">Line Coverage</div>
             </div>
@@ -178,7 +185,7 @@
             <button onclick="window.print()">Print</button>
         </div>
 
-        {{#requirements}}
+        {{#specs}}
         <div class="req-card">
             <details>
                 <summary>
@@ -188,9 +195,9 @@
                         <div class="req-badges">
                             <span class="badge status-{{status}}">{{status}}</span>
                             <span class="badge {{coverageBadgeClass}}">{{coverageBadgeLabel}}</span>
-                            {{#hasCornerCases}}
-                            <span class="badge cc-count">CC {{coveredCcCount}}/{{totalCcCount}}</span>
-                            {{/hasCornerCases}}
+                            {{#hasCases}}
+                            <span class="badge cc-count">CC {{coveredCaseCount}}/{{totalCaseCount}}</span>
+                            {{/hasCases}}
                         </div>
                     </div>
                 </summary>
@@ -214,7 +221,7 @@
                     {{#hasTests}}
                     <ul class="test-list">
                         {{#tests}}
-                        <li>{{title}} <span class="test-version">v{{requirementVersionAtTest}}</span></li>
+                        <li>{{title}} <span class="test-version">v{{specVersionAtTest}}</span></li>
                         {{/tests}}
                     </ul>
                     {{/hasTests}}
@@ -222,10 +229,10 @@
                     <div class="no-tests">No mapped tests</div>
                     {{/hasTests}}
 
-                    {{#hasCornerCases}}
-                    <div class="req-section-label">Corner Cases</div>
+                    {{#hasCases}}
+                    <div class="req-section-label">Cases</div>
                     <div class="cc-list">
-                        {{#cornerCases}}
+                        {{#cases}}
                         <div class="cc-item {{ccCoveredClass}}">
                             <div class="cc-header">
                                 <span class="cc-id">{{id}}</span>
@@ -233,24 +240,24 @@
                             </div>
                             <div class="cc-description">{{description}}</div>
                         </div>
-                        {{/cornerCases}}
+                        {{/cases}}
                     </div>
-                    {{/hasCornerCases}}
+                    {{/hasCases}}
 
-                    {{#hasReqViolations}}
+                    {{#hasSpecViolations}}
                     <div class="req-violations">
-                        {{#reqViolations}}
+                        {{#specViolations}}
                         <div class="req-violation {{severityLower}}">
                             <span class="severity-tag">{{severity}}</span>
                             {{message}}
                         </div>
-                        {{/reqViolations}}
+                        {{/specViolations}}
                     </div>
-                    {{/hasReqViolations}}
+                    {{/hasSpecViolations}}
                 </div>
             </details>
         </div>
-        {{/requirements}}
+        {{/specs}}
     </div>
 
     <footer>

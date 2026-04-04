@@ -11,10 +11,11 @@ function makeSampleMatrix(): CoverageMatrix {
     moduleId: 'AUTH',
     moduleName: 'Authentication Module',
     generatedAt: '2026-03-31T10:00:00Z',
-    requirementCoverage: 66.7,
-    cornerCaseCoverage: 50.0,
+    specCoverage: 66.7,
+    caseCoverage: 50.0,
+    passingCaseCoverage: 33.3,
     codeCoverage: 73.2,
-    requirements: [
+    specs: [
       {
         id: 'AUTH-001',
         title: 'User login',
@@ -22,8 +23,8 @@ function makeSampleMatrix(): CoverageMatrix {
         status: 'approved',
         covered: true,
         passing: true,
-        tests: [{ title: 'login test', requirementVersionAtTest: '1.1.0' }],
-        cornerCases: [
+        tests: [{ title: 'login test', specVersionAtTest: '1.1.0' }],
+        cases: [
           { id: 'AUTH-001-CC-001', covered: true, passing: true },
           { id: 'AUTH-001-CC-002', covered: false, passing: null },
         ],
@@ -35,8 +36,8 @@ function makeSampleMatrix(): CoverageMatrix {
         status: 'approved',
         covered: true,
         passing: false,
-        tests: [{ title: 'refresh test', requirementVersionAtTest: '1.0.0' }],
-        cornerCases: [],
+        tests: [{ title: 'refresh test', specVersionAtTest: '1.0.0' }],
+        cases: [],
       },
       {
         id: 'AUTH-005',
@@ -46,7 +47,7 @@ function makeSampleMatrix(): CoverageMatrix {
         covered: false,
         passing: null,
         tests: [],
-        cornerCases: [
+        cases: [
           { id: 'AUTH-005-CC-001', covered: false, passing: null },
         ],
       },
@@ -54,16 +55,16 @@ function makeSampleMatrix(): CoverageMatrix {
     violations: [
       {
         severity: 'ERROR',
-        type: 'UNCOVERED_REQUIREMENT',
-        requirementId: 'AUTH-005',
-        message: "Approved requirement 'AUTH-005' has no mapped test",
+        type: 'UNCOVERED_SPEC',
+        specId: 'AUTH-005',
+        message: "Approved spec 'AUTH-005' has no mapped test",
       },
       {
         severity: 'WARN',
-        type: 'UNCOVERED_CORNER_CASE',
-        requirementId: 'AUTH-001',
-        cornerCaseId: 'AUTH-001-CC-002',
-        message: "Corner case 'AUTH-001-CC-002' has no mapped test",
+        type: 'UNCOVERED_CASE',
+        specId: 'AUTH-001',
+        caseId: 'AUTH-001-CC-002',
+        message: "Case 'AUTH-001-CC-002' has no mapped test",
       },
     ],
   };
@@ -80,8 +81,8 @@ afterEach(() => {
 });
 
 describe('writeJsonReport', () => {
-  test('writes valid JSON with expected shape', ({ requirement }) => {
-    requirement('PRATYA-004');
+  test('writes valid JSON with expected shape', ({ spec }) => {
+    spec('PRATYA-004');
     const matrix = makeSampleMatrix();
     const outputPath = path.join(tmpDir, 'report', 'pratya-report.json');
     writeJsonReport(matrix, outputPath);
@@ -89,28 +90,29 @@ describe('writeJsonReport', () => {
     const raw = JSON.parse(fs.readFileSync(outputPath, 'utf-8'));
     expect(raw.module).toBe('AUTH');
     expect(raw.generatedAt).toBe('2026-03-31T10:00:00Z');
-    expect(raw.summary.totalRequirements).toBe(3);
-    expect(raw.summary.requirementCoverage).toBe(66.7);
+    expect(raw.summary.totalSpecs).toBe(3);
+    expect(raw.summary.specCoverage).toBe(66.7);
+    expect(raw.summary.passingCaseCoverage).toBe(33.3);
     expect(raw.summary.codeCoverage).toBe(73.2);
-    expect(raw.requirements).toHaveLength(3);
+    expect(raw.specs).toHaveLength(3);
     expect(raw.violations).toHaveLength(2);
   });
 
-  test('counts active and covered requirements correctly', ({ requirement }) => {
-    requirement('PRATYA-004');
+  test('counts active and covered specs correctly', ({ spec }) => {
+    spec('PRATYA-004');
     const matrix = makeSampleMatrix();
     const outputPath = path.join(tmpDir, 'pratya-report.json');
     writeJsonReport(matrix, outputPath);
 
     const raw = JSON.parse(fs.readFileSync(outputPath, 'utf-8'));
-    expect(raw.summary.activeRequirements).toBe(3);
-    expect(raw.summary.coveredRequirements).toBe(2);
+    expect(raw.summary.activeSpecs).toBe(3);
+    expect(raw.summary.coveredSpecs).toBe(2);
   });
 });
 
 describe('writeHtmlReport', () => {
-  test('generates an HTML file with key markers', ({ requirement }) => {
-    requirement(['PRATYA-004', 'PRATYA-004-CC-001']);
+  test('generates an HTML file with key markers', ({ spec }) => {
+    spec(['PRATYA-004', 'PRATYA-004-CC-001']);
     const matrix = makeSampleMatrix();
     writeHtmlReport(matrix, tmpDir);
 

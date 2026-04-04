@@ -1,11 +1,11 @@
 import * as fs from 'node:fs';
 import * as yaml from 'js-yaml';
 import Ajv from 'ajv';
-import type { ModuleContract, Requirement, RequirementStatus } from './model.js';
+import type { ModuleContract, Spec, SpecStatus } from './model.js';
 
 const contractSchema = {
   type: 'object',
-  required: ['module', 'requirements'],
+  required: ['module', 'specs'],
   properties: {
     module: {
       type: 'object',
@@ -20,11 +20,11 @@ const contractSchema = {
       },
       additionalProperties: false,
     },
-    requirements: {
+    specs: {
       type: 'array',
       items: {
         type: 'object',
-        required: ['id', 'version', 'status', 'title', 'description', 'acceptance_criteria', 'corner_cases', 'changelog'],
+        required: ['id', 'version', 'status', 'title', 'description', 'acceptance_criteria', 'cases', 'changelog'],
         properties: {
           id: { type: 'string', pattern: '^[A-Z][A-Z0-9_-]*-\\d{3}$' },
           version: { type: 'string', pattern: '^\\d+\\.\\d+\\.\\d+$' },
@@ -34,7 +34,7 @@ const contractSchema = {
           acceptance_criteria: { type: 'array', items: { type: 'string' } },
           supersedes: { type: 'string' },
           superseded_by: { type: 'string' },
-          corner_cases: {
+          cases: {
             type: 'array',
             items: {
               type: 'object',
@@ -98,64 +98,64 @@ export function parseContractYaml(content: string, sourcePath: string = '<inline
 
   const data = raw as {
     module: { id: string; name: string; description: string; owner?: string; created?: string; version: string };
-    requirements: Array<{
+    specs: Array<{
       id: string;
       version: string;
-      status: RequirementStatus;
+      status: SpecStatus;
       title: string;
       description: string;
       acceptance_criteria: string[];
-      corner_cases: Array<{ id: string; description: string }>;
+      cases: Array<{ id: string; description: string }>;
       supersedes?: string;
       superseded_by?: string;
       changelog: Array<{ version: string; date: string; note: string }>;
     }>;
   };
 
-  // Check for duplicate requirement IDs
-  const reqIds = new Set<string>();
-  const ccIds = new Set<string>();
-  for (const req of data.requirements) {
-    if (reqIds.has(req.id)) {
-      throw new Error(`Duplicate requirement ID '${req.id}' in ${sourcePath}`);
+  // Check for duplicate spec IDs
+  const specIds = new Set<string>();
+  const caseIds = new Set<string>();
+  for (const spec of data.specs) {
+    if (specIds.has(spec.id)) {
+      throw new Error(`Duplicate spec ID '${spec.id}' in ${sourcePath}`);
     }
-    reqIds.add(req.id);
+    specIds.add(spec.id);
 
-    for (const cc of req.corner_cases) {
-      if (ccIds.has(cc.id)) {
-        throw new Error(`Duplicate corner case ID '${cc.id}' in ${sourcePath}`);
+    for (const c of spec.cases) {
+      if (caseIds.has(c.id)) {
+        throw new Error(`Duplicate case ID '${c.id}' in ${sourcePath}`);
       }
-      ccIds.add(cc.id);
+      caseIds.add(c.id);
     }
   }
 
   // Build lookup for supersession validation
-  const allIds = new Set(data.requirements.map(r => r.id));
+  const allIds = new Set(data.specs.map(s => s.id));
 
-  for (const req of data.requirements) {
-    if (req.superseded_by && !allIds.has(req.superseded_by)) {
+  for (const spec of data.specs) {
+    if (spec.superseded_by && !allIds.has(spec.superseded_by)) {
       throw new Error(
-        `Requirement '${req.id}' has superseded_by '${req.superseded_by}' which does not exist in ${sourcePath}`
+        `Spec '${spec.id}' has superseded_by '${spec.superseded_by}' which does not exist in ${sourcePath}`
       );
     }
-    if (req.supersedes && !allIds.has(req.supersedes)) {
+    if (spec.supersedes && !allIds.has(spec.supersedes)) {
       throw new Error(
-        `Requirement '${req.id}' has supersedes '${req.supersedes}' which does not exist in ${sourcePath}`
+        `Spec '${spec.id}' has supersedes '${spec.supersedes}' which does not exist in ${sourcePath}`
       );
     }
   }
 
-  const requirements: Requirement[] = data.requirements.map(r => ({
-    id: r.id,
-    version: r.version,
-    status: r.status,
-    title: r.title,
-    description: r.description,
-    acceptanceCriteria: r.acceptance_criteria,
-    cornerCases: r.corner_cases.map(cc => ({ id: cc.id, description: cc.description })),
-    supersedes: r.supersedes,
-    supersededBy: r.superseded_by,
-    changelog: r.changelog.map(c => ({ version: c.version, date: c.date, note: c.note })),
+  const specs: Spec[] = data.specs.map(s => ({
+    id: s.id,
+    version: s.version,
+    status: s.status,
+    title: s.title,
+    description: s.description,
+    acceptanceCriteria: s.acceptance_criteria,
+    cases: s.cases.map(c => ({ id: c.id, description: c.description })),
+    supersedes: s.supersedes,
+    supersededBy: s.superseded_by,
+    changelog: s.changelog.map(c => ({ version: c.version, date: c.date, note: c.note })),
   }));
 
   return {
@@ -165,7 +165,7 @@ export function parseContractYaml(content: string, sourcePath: string = '<inline
     owner: data.module.owner,
     created: data.module.created ?? '',
     version: data.module.version,
-    requirements,
+    specs,
   };
 }
 

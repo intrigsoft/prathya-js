@@ -2,9 +2,9 @@ import * as fs from 'node:fs';
 import * as yaml from 'js-yaml';
 import type {
   ModuleContract,
-  Requirement,
-  CornerCase,
-  RequirementStatus,
+  Spec,
+  Case,
+  SpecStatus,
   ChangelogEntry,
 } from './model.js';
 import { parseContract } from './parser.js';
@@ -14,15 +14,15 @@ import { parseContract } from './parser.js';
  * All mutations are append-only — IDs are never reused or deleted.
  */
 
-export interface AddRequirementInput {
+export interface AddSpecInput {
   id?: string;
   title: string;
   description?: string;
-  status?: RequirementStatus;
+  status?: SpecStatus;
   acceptanceCriteria?: string[];
 }
 
-export interface UpdateRequirementInput {
+export interface UpdateSpecInput {
   id: string;
   title?: string;
   description?: string;
@@ -31,132 +31,132 @@ export interface UpdateRequirementInput {
   note?: string;
 }
 
-export interface AddCornerCaseInput {
-  reqId: string;
+export interface AddCaseInput {
+  specId: string;
   id?: string;
   description: string;
 }
 
-export interface UpdateCornerCaseInput {
-  reqId: string;
-  ccId: string;
+export interface UpdateCaseInput {
+  specId: string;
+  caseId: string;
   description?: string;
 }
 
-export function addRequirement(contractPath: string, input: AddRequirementInput): Requirement {
+export function addSpec(contractPath: string, input: AddSpecInput): Spec {
   const raw = loadRawYaml(contractPath);
   const contract = parseContract(contractPath);
 
-  const id = input.id ?? generateRequirementId(contract);
+  const id = input.id ?? generateSpecId(contract);
   const now = new Date().toISOString().split('T')[0];
 
-  const newReq = {
+  const newSpec = {
     id,
     version: '1.0.0',
     status: input.status ?? 'draft',
     title: input.title,
     description: input.description ?? '',
     acceptance_criteria: input.acceptanceCriteria ?? [],
-    corner_cases: [] as Array<{ id: string; description: string }>,
+    cases: [] as Array<{ id: string; description: string }>,
     changelog: [{ version: '1.0.0', date: now, note: 'Initial definition' }],
   };
 
-  raw.requirements.push(newReq);
+  raw.specs.push(newSpec);
   writeRawYaml(contractPath, raw);
 
   return {
     id,
     version: '1.0.0',
-    status: (input.status ?? 'draft') as RequirementStatus,
+    status: (input.status ?? 'draft') as SpecStatus,
     title: input.title,
     description: input.description ?? '',
     acceptanceCriteria: input.acceptanceCriteria ?? [],
-    cornerCases: [],
+    cases: [],
     changelog: [{ version: '1.0.0', date: now, note: 'Initial definition' }],
   };
 }
 
-export function updateRequirement(contractPath: string, input: UpdateRequirementInput): void {
+export function updateSpec(contractPath: string, input: UpdateSpecInput): void {
   const raw = loadRawYaml(contractPath);
-  const req = raw.requirements.find(r => r.id === input.id);
-  if (!req) throw new Error(`Requirement '${input.id}' not found`);
+  const spec = raw.specs.find(s => s.id === input.id);
+  if (!spec) throw new Error(`Spec '${input.id}' not found`);
 
-  if (input.title) req.title = input.title;
-  if (input.description) req.description = input.description;
-  if (input.acceptanceCriteria) req.acceptance_criteria = input.acceptanceCriteria;
+  if (input.title) spec.title = input.title;
+  if (input.description) spec.description = input.description;
+  if (input.acceptanceCriteria) spec.acceptance_criteria = input.acceptanceCriteria;
   if (input.version) {
-    req.version = input.version;
+    spec.version = input.version;
     const now = new Date().toISOString().split('T')[0];
-    req.changelog.push({ version: input.version, date: now, note: input.note ?? 'Updated' });
+    spec.changelog.push({ version: input.version, date: now, note: input.note ?? 'Updated' });
   } else if (input.note) {
     const now = new Date().toISOString().split('T')[0];
-    req.changelog.push({ version: req.version, date: now, note: input.note });
+    spec.changelog.push({ version: spec.version, date: now, note: input.note });
   }
 
   writeRawYaml(contractPath, raw);
 }
 
-export function addCornerCase(contractPath: string, input: AddCornerCaseInput): CornerCase {
+export function addCase(contractPath: string, input: AddCaseInput): Case {
   const raw = loadRawYaml(contractPath);
-  const req = raw.requirements.find(r => r.id === input.reqId);
-  if (!req) throw new Error(`Requirement '${input.reqId}' not found`);
+  const spec = raw.specs.find(s => s.id === input.specId);
+  if (!spec) throw new Error(`Spec '${input.specId}' not found`);
 
-  const id = input.id ?? generateCornerCaseId(req);
+  const id = input.id ?? generateCaseId(spec);
 
-  const cc = { id, description: input.description };
-  req.corner_cases.push(cc);
+  const c = { id, description: input.description };
+  spec.cases.push(c);
   writeRawYaml(contractPath, raw);
 
   return { id, description: input.description };
 }
 
-export function updateCornerCase(contractPath: string, input: UpdateCornerCaseInput): void {
+export function updateCase(contractPath: string, input: UpdateCaseInput): void {
   const raw = loadRawYaml(contractPath);
-  const req = raw.requirements.find(r => r.id === input.reqId);
-  if (!req) throw new Error(`Requirement '${input.reqId}' not found`);
+  const spec = raw.specs.find(s => s.id === input.specId);
+  if (!spec) throw new Error(`Spec '${input.specId}' not found`);
 
-  const cc = req.corner_cases.find(c => c.id === input.ccId);
-  if (!cc) throw new Error(`Corner case '${input.ccId}' not found in '${input.reqId}'`);
+  const c = spec.cases.find(c => c.id === input.caseId);
+  if (!c) throw new Error(`Case '${input.caseId}' not found in '${input.specId}'`);
 
-  if (input.description) cc.description = input.description;
+  if (input.description) c.description = input.description;
 
   writeRawYaml(contractPath, raw);
 }
 
-export function deprecateRequirement(contractPath: string, id: string, reason?: string): void {
+export function deprecateSpec(contractPath: string, id: string, reason?: string): void {
   const raw = loadRawYaml(contractPath);
-  const req = raw.requirements.find(r => r.id === id);
-  if (!req) throw new Error(`Requirement '${id}' not found`);
-  if (req.status !== 'approved') throw new Error(`Only approved requirements can be deprecated (current: ${req.status})`);
+  const spec = raw.specs.find(s => s.id === id);
+  if (!spec) throw new Error(`Spec '${id}' not found`);
+  if (spec.status !== 'approved') throw new Error(`Only approved specs can be deprecated (current: ${spec.status})`);
 
-  req.status = 'deprecated';
+  spec.status = 'deprecated';
   const now = new Date().toISOString().split('T')[0];
-  req.changelog.push({ version: req.version, date: now, note: reason ?? 'Deprecated' });
+  spec.changelog.push({ version: spec.version, date: now, note: reason ?? 'Deprecated' });
 
   writeRawYaml(contractPath, raw);
 }
 
-export function supersedeRequirement(
+export function supersedeSpec(
   contractPath: string,
   oldId: string,
   input: { newId?: string; title: string; description?: string; acceptanceCriteria?: string[] },
-): Requirement {
+): Spec {
   const raw = loadRawYaml(contractPath);
   const contract = parseContract(contractPath);
 
-  const oldReq = raw.requirements.find(r => r.id === oldId);
-  if (!oldReq) throw new Error(`Requirement '${oldId}' not found`);
+  const oldSpec = raw.specs.find(s => s.id === oldId);
+  if (!oldSpec) throw new Error(`Spec '${oldId}' not found`);
 
-  const newId = input.newId ?? generateRequirementId(contract);
+  const newId = input.newId ?? generateSpecId(contract);
   const now = new Date().toISOString().split('T')[0];
 
   // Mark old as superseded
-  oldReq.status = 'superseded';
-  oldReq.superseded_by = newId;
-  oldReq.changelog.push({ version: oldReq.version, date: now, note: `Superseded by ${newId}` });
+  oldSpec.status = 'superseded';
+  oldSpec.superseded_by = newId;
+  oldSpec.changelog.push({ version: oldSpec.version, date: now, note: `Superseded by ${newId}` });
 
-  // Create new requirement
-  const newReq = {
+  // Create new spec
+  const newSpec = {
     id: newId,
     version: '1.0.0',
     status: 'approved',
@@ -164,11 +164,11 @@ export function supersedeRequirement(
     title: input.title,
     description: input.description ?? '',
     acceptance_criteria: input.acceptanceCriteria ?? [],
-    corner_cases: [] as Array<{ id: string; description: string }>,
+    cases: [] as Array<{ id: string; description: string }>,
     changelog: [{ version: '1.0.0', date: now, note: `Supersedes ${oldId}` }],
   };
 
-  raw.requirements.push(newReq);
+  raw.specs.push(newSpec);
   writeRawYaml(contractPath, raw);
 
   return {
@@ -179,14 +179,14 @@ export function supersedeRequirement(
     title: input.title,
     description: input.description ?? '',
     acceptanceCriteria: input.acceptanceCriteria ?? [],
-    cornerCases: [],
+    cases: [],
     changelog: [{ version: '1.0.0', date: now, note: `Supersedes ${oldId}` }],
   };
 }
 
 // --- Helpers ---
 
-interface RawCornerCase {
+interface RawCase {
   id: string;
   description: string;
   [key: string]: unknown;
@@ -198,14 +198,14 @@ interface RawChangelogEntry {
   note: string;
 }
 
-interface RawRequirement {
+interface RawSpec {
   id: string;
   version: string;
   status: string;
   title: string;
   description: string;
   acceptance_criteria: string[];
-  corner_cases: RawCornerCase[];
+  cases: RawCase[];
   changelog: RawChangelogEntry[];
   supersedes?: string;
   superseded_by?: string;
@@ -214,14 +214,14 @@ interface RawRequirement {
 
 interface RawContract {
   module: Record<string, unknown>;
-  requirements: RawRequirement[];
+  specs: RawSpec[];
   [key: string]: unknown;
 }
 
 function loadRawYaml(contractPath: string): RawContract {
   const content = fs.readFileSync(contractPath, 'utf-8');
   const raw = yaml.load(content) as Record<string, unknown>;
-  if (!raw || !Array.isArray(raw.requirements)) {
+  if (!raw || !Array.isArray(raw.specs)) {
     throw new Error(`Invalid CONTRACT.yaml at ${contractPath}`);
   }
   return raw as unknown as RawContract;
@@ -237,11 +237,11 @@ function writeRawYaml(contractPath: string, data: RawContract): void {
   fs.writeFileSync(contractPath, content, 'utf-8');
 }
 
-function generateRequirementId(contract: ModuleContract): string {
+function generateSpecId(contract: ModuleContract): string {
   const prefix = contract.moduleId;
-  const existingNums = contract.requirements
-    .map(r => {
-      const match = r.id.match(new RegExp(`^${prefix}-(\\d+)$`));
+  const existingNums = contract.specs
+    .map(s => {
+      const match = s.id.match(new RegExp(`^${prefix}-(\\d+)$`));
       return match ? parseInt(match[1], 10) : 0;
     })
     .filter(n => n > 0);
@@ -249,15 +249,15 @@ function generateRequirementId(contract: ModuleContract): string {
   return `${prefix}-${String(next).padStart(3, '0')}`;
 }
 
-function generateCornerCaseId(req: RawRequirement): string {
-  const reqId = req.id;
-  const ccs = req.corner_cases ?? [];
-  const existingNums = ccs
-    .map(cc => {
-      const match = cc.id.match(/-CC-(\d+)$/);
+function generateCaseId(spec: RawSpec): string {
+  const specId = spec.id;
+  const cases = spec.cases ?? [];
+  const existingNums = cases
+    .map(c => {
+      const match = c.id.match(/-CC-(\d+)$/);
       return match ? parseInt(match[1], 10) : 0;
     })
     .filter(n => n > 0);
   const next = existingNums.length > 0 ? Math.max(...existingNums) + 1 : 1;
-  return `${reqId}-CC-${String(next).padStart(3, '0')}`;
+  return `${specId}-CC-${String(next).padStart(3, '0')}`;
 }

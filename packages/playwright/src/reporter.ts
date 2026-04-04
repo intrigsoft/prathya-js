@@ -10,7 +10,7 @@ import {
   resolveReporterOptions,
 } from '@intrigsoft/pratya-core';
 import type {
-  RequirementStatus,
+  SpecStatus,
   TraceEntry,
   TestResult,
   IntegrationReporterOptions,
@@ -20,8 +20,8 @@ export interface PratyaReporterOptions {
   contractPath?: string;
   outputDir?: string;
   failOnViolations?: boolean;
-  minimumRequirementCoverage?: number;
-  excludeStatuses?: RequirementStatus[];
+  minimumSpecCoverage?: number;
+  excludeStatuses?: SpecStatus[];
   codeCoverage?: { summaryPath: string };
 }
 
@@ -45,30 +45,30 @@ class PratyaReporter implements Reporter {
       contractPath: options?.contractPath,
       outputDir: options?.outputDir,
       failOnViolations: options?.failOnViolations,
-      minimumRequirementCoverage: options?.minimumRequirementCoverage,
+      minimumSpecCoverage: options?.minimumSpecCoverage,
       excludeStatuses: options?.excludeStatuses,
       codeCoverage: options?.codeCoverage,
     });
   }
 
   onTestEnd(test: TestCase, result: PlaywrightTestResult): void {
-    const reqAnnotations = test.annotations.filter(a => a.type === 'requirement');
-    if (reqAnnotations.length === 0) return;
+    const specAnnotations = test.annotations.filter(a => a.type === 'spec');
+    if (specAnnotations.length === 0) return;
 
-    const requirementIds = reqAnnotations
+    const specIds = specAnnotations
       .map(a => a.description)
       .filter((d): d is string => typeof d === 'string');
 
-    if (requirementIds.length === 0) return;
+    if (specIds.length === 0) return;
 
-    let requirementVersionAtTest: Record<string, string> | undefined;
+    let specVersionAtTest: Record<string, string> | undefined;
     try {
       const contract = parseContract(this.options.contractPath);
-      requirementVersionAtTest = {};
-      for (const id of requirementIds) {
-        const req = contract.requirements.find(r => r.id === id);
-        if (req) {
-          requirementVersionAtTest[id] = req.version;
+      specVersionAtTest = {};
+      for (const id of specIds) {
+        const spec = contract.specs.find(r => r.id === id);
+        if (spec) {
+          specVersionAtTest[id] = spec.version;
         }
       }
     } catch {
@@ -76,10 +76,10 @@ class PratyaReporter implements Reporter {
     }
 
     this.traces.push({
-      requirementIds,
+      specIds,
       testTitle: test.title,
       testFile: test.location.file,
-      requirementVersionAtTest,
+      specVersionAtTest,
       result: toTestResult(result.status),
     });
   }

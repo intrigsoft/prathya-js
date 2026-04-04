@@ -5,19 +5,18 @@ import Mustache from 'mustache';
 import type { CoverageMatrix, ModuleContract } from './model.js';
 
 export function writeJsonReport(matrix: CoverageMatrix, outputPath: string): void {
-  const totalRequirements = matrix.requirements.length;
-  // Active = those not excluded (everything in the matrix is active by definition from coverage computation)
-  const activeRequirements = matrix.requirements.filter(
-    r => r.status === 'approved' || r.status === 'draft',
+  const totalSpecs = matrix.specs.length;
+  const activeSpecs = matrix.specs.filter(
+    s => s.status === 'approved' || s.status === 'draft',
   );
-  const coveredRequirements = activeRequirements.filter(r => r.covered).length;
+  const coveredSpecs = activeSpecs.filter(s => s.covered).length;
 
-  const totalCornerCases = matrix.requirements.reduce(
-    (sum, r) => sum + r.cornerCases.length,
+  const totalCases = matrix.specs.reduce(
+    (sum, s) => sum + s.cases.length,
     0,
   );
-  const coveredCornerCases = matrix.requirements.reduce(
-    (sum, r) => sum + r.cornerCases.filter(cc => cc.covered).length,
+  const coveredCases = matrix.specs.reduce(
+    (sum, s) => sum + s.cases.filter(c => c.covered).length,
     0,
   );
 
@@ -25,16 +24,17 @@ export function writeJsonReport(matrix: CoverageMatrix, outputPath: string): voi
     module: matrix.moduleId,
     generatedAt: matrix.generatedAt,
     summary: {
-      totalRequirements,
-      activeRequirements: activeRequirements.length,
-      coveredRequirements,
-      requirementCoverage: matrix.requirementCoverage,
-      totalCornerCases,
-      coveredCornerCases,
-      cornerCaseCoverage: matrix.cornerCaseCoverage,
+      totalSpecs,
+      activeSpecs: activeSpecs.length,
+      coveredSpecs,
+      specCoverage: matrix.specCoverage,
+      totalCases,
+      coveredCases,
+      caseCoverage: matrix.caseCoverage,
+      passingCaseCoverage: matrix.passingCaseCoverage,
       ...(matrix.codeCoverage !== undefined ? { codeCoverage: matrix.codeCoverage } : {}),
     },
-    requirements: matrix.requirements,
+    specs: matrix.specs,
     violations: matrix.violations,
   };
 
@@ -47,52 +47,55 @@ export function writeHtmlReport(matrix: CoverageMatrix, outputDir: string, contr
   const template = fs.readFileSync(templatePath, 'utf-8');
 
   // Build a lookup from contract for descriptions and acceptance criteria
-  const contractReqMap = new Map<string, { description: string; acceptanceCriteria: string[]; cornerCaseDescriptions: Map<string, string> }>();
+  const contractSpecMap = new Map<string, { description: string; acceptanceCriteria: string[]; caseDescriptions: Map<string, string> }>();
   if (contract) {
-    for (const req of contract.requirements) {
-      const ccDescriptions = new Map<string, string>();
-      for (const cc of req.cornerCases) {
-        ccDescriptions.set(cc.id, cc.description);
+    for (const spec of contract.specs) {
+      const caseDescriptions = new Map<string, string>();
+      for (const c of spec.cases) {
+        caseDescriptions.set(c.id, c.description);
       }
-      contractReqMap.set(req.id, {
-        description: req.description,
-        acceptanceCriteria: req.acceptanceCriteria,
-        cornerCaseDescriptions: ccDescriptions,
+      contractSpecMap.set(spec.id, {
+        description: spec.description,
+        acceptanceCriteria: spec.acceptanceCriteria,
+        caseDescriptions,
       });
     }
   }
 
   // Aggregate counts
-  const activeReqCount = matrix.requirements.length;
-  const coveredReqCount = matrix.requirements.filter(r => r.covered).length;
-  const totalCcCount = matrix.requirements.reduce((s, r) => s + r.cornerCases.length, 0);
-  const coveredCcCount = matrix.requirements.reduce((s, r) => s + r.cornerCases.filter(cc => cc.covered).length, 0);
-  const totalItemCount = activeReqCount + totalCcCount;
-  const coveredItemCount = coveredReqCount + coveredCcCount;
+  const activeSpecCount = matrix.specs.length;
+  const coveredSpecCount = matrix.specs.filter(s => s.covered).length;
+  const totalCaseCount = matrix.specs.reduce((sum, s) => sum + s.cases.length, 0);
+  const coveredCaseCount = matrix.specs.reduce((sum, s) => sum + s.cases.filter(c => c.covered).length, 0);
+  const passingCaseCount = matrix.specs.reduce((sum, s) => sum + s.cases.filter(c => c.passing === true).length, 0);
+  const totalItemCount = activeSpecCount + totalCaseCount;
+  const coveredItemCount = coveredSpecCount + coveredCaseCount;
 
-  // Build violation map keyed by requirementId
-  const violationsByReq = new Map<string, typeof matrix.violations>();
+  // Build violation map keyed by specId
+  const violationsBySpec = new Map<string, typeof matrix.violations>();
   for (const v of matrix.violations) {
-    const key = v.requirementId ?? '__global__';
-    const list = violationsByReq.get(key) ?? [];
+    const key = v.specId ?? '__global__';
+    const list = violationsBySpec.get(key) ?? [];
     list.push(v);
-    violationsByReq.set(key, list);
+    violationsBySpec.set(key, list);
   }
 
   const view = {
     moduleId: matrix.moduleId,
     moduleName: matrix.moduleName,
     generatedAt: matrix.generatedAt,
-    requirementCoverage: matrix.requirementCoverage.toFixed(1),
-    cornerCaseCoverage: matrix.cornerCaseCoverage.toFixed(1),
+    specCoverage: matrix.specCoverage.toFixed(1),
+    caseCoverage: matrix.caseCoverage.toFixed(1),
+    passingCaseCoverage: matrix.passingCaseCoverage.toFixed(1),
     hasCodeCoverage: matrix.codeCoverage !== undefined,
     codeCoverage: matrix.codeCoverage?.toFixed(1),
 
     // Summary counts
-    activeReqCount,
-    coveredReqCount,
-    totalCcCount,
-    coveredCcCount,
+    activeSpecCount,
+    coveredSpecCount,
+    totalCaseCount,
+    coveredCaseCount,
+    passingCaseCount,
     totalItemCount,
     coveredItemCount,
 
@@ -104,33 +107,33 @@ export function writeHtmlReport(matrix: CoverageMatrix, outputDir: string, contr
       severityLower: v.severity.toLowerCase(),
     })),
 
-    requirements: matrix.requirements.map(r => {
-      const contractInfo = contractReqMap.get(r.id);
-      const reqCoveredCcCount = r.cornerCases.filter(cc => cc.covered).length;
-      const reqTotalCcCount = r.cornerCases.length;
-      const reqViolations = violationsByReq.get(r.id) ?? [];
+    specs: matrix.specs.map(s => {
+      const contractInfo = contractSpecMap.get(s.id);
+      const specCoveredCaseCount = s.cases.filter(c => c.covered).length;
+      const specTotalCaseCount = s.cases.length;
+      const specViolations = violationsBySpec.get(s.id) ?? [];
 
       return {
-        ...r,
+        ...s,
         description: contractInfo?.description ?? '',
         acceptanceCriteria: contractInfo?.acceptanceCriteria ?? [],
         hasAcceptanceCriteria: (contractInfo?.acceptanceCriteria ?? []).length > 0,
-        testCount: r.tests.length,
-        hasTests: r.tests.length > 0,
-        hasCornerCases: r.cornerCases.length > 0,
-        coveredCcCount: reqCoveredCcCount,
-        totalCcCount: reqTotalCcCount,
-        coverageBadgeClass: r.covered ? (r.passing ? 'covered' : 'failing') : 'uncovered',
-        coverageBadgeLabel: r.covered ? (r.passing ? 'covered' : 'failing') : 'uncovered',
-        cornerCases: r.cornerCases.map(cc => ({
-          ...cc,
-          description: contractInfo?.cornerCaseDescriptions?.get(cc.id) ?? cc.id,
-          ccCoveredClass: cc.covered ? 'cc-covered' : 'cc-uncovered',
-          ccBadgeClass: cc.covered ? 'covered' : 'uncovered',
-          ccBadgeLabel: cc.covered ? 'covered' : 'uncovered',
+        testCount: s.tests.length,
+        hasTests: s.tests.length > 0,
+        hasCases: s.cases.length > 0,
+        coveredCaseCount: specCoveredCaseCount,
+        totalCaseCount: specTotalCaseCount,
+        coverageBadgeClass: s.covered ? (s.passing ? 'covered' : 'failing') : 'uncovered',
+        coverageBadgeLabel: s.covered ? (s.passing ? 'covered' : 'failing') : 'uncovered',
+        cases: s.cases.map(c => ({
+          ...c,
+          description: contractInfo?.caseDescriptions?.get(c.id) ?? c.id,
+          ccCoveredClass: c.covered ? 'cc-covered' : 'cc-uncovered',
+          ccBadgeClass: c.covered ? 'covered' : 'uncovered',
+          ccBadgeLabel: c.covered ? 'covered' : 'uncovered',
         })),
-        hasReqViolations: reqViolations.length > 0,
-        reqViolations: reqViolations.map(v => ({
+        hasSpecViolations: specViolations.length > 0,
+        specViolations: specViolations.map(v => ({
           ...v,
           severityLower: v.severity.toLowerCase(),
         })),
@@ -162,21 +165,21 @@ function resolveTemplatePath(): string {
 }
 
 function getQuadrant(
-  reqCoverage: number,
+  specCoverage: number,
   codeCoverage?: number,
 ): { label: string; cssClass: string } {
-  const reqHigh = reqCoverage >= 70;
+  const specHigh = specCoverage >= 70;
   const codeHigh = codeCoverage !== undefined && codeCoverage >= 70;
   const codeAvailable = codeCoverage !== undefined;
 
   if (!codeAvailable) {
-    return reqHigh
-      ? { label: 'Requirement Coverage High', cssClass: 'quadrant-good' }
-      : { label: 'Requirement Coverage Low', cssClass: 'quadrant-danger' };
+    return specHigh
+      ? { label: 'Spec Coverage High', cssClass: 'quadrant-good' }
+      : { label: 'Spec Coverage Low', cssClass: 'quadrant-danger' };
   }
 
-  if (reqHigh && codeHigh) return { label: 'Healthy', cssClass: 'quadrant-healthy' };
-  if (reqHigh && !codeHigh) return { label: 'Dead code or over-abstraction', cssClass: 'quadrant-warn' };
-  if (!reqHigh && codeHigh) return { label: 'Undocumented/missing features', cssClass: 'quadrant-warn' };
+  if (specHigh && codeHigh) return { label: 'Healthy', cssClass: 'quadrant-healthy' };
+  if (specHigh && !codeHigh) return { label: 'Dead code or over-abstraction', cssClass: 'quadrant-warn' };
+  if (!specHigh && codeHigh) return { label: 'Undocumented/missing features', cssClass: 'quadrant-warn' };
   return { label: 'Chaos — prototype territory', cssClass: 'quadrant-danger' };
 }

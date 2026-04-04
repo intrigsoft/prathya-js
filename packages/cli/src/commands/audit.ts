@@ -21,7 +21,7 @@ export function auditCommand(options: {
 
   // Load existing report for traces and staleness check
   let previousReport: CoverageMatrix | undefined;
-  const traces: Array<{ requirementIds: string[]; testTitle: string; testFile: string; requirementVersionAtTest?: Record<string, string>; result?: 'passed' | 'failed' | 'skipped' }> = [];
+  const traces: Array<{ specIds: string[]; testTitle: string; testFile: string; specVersionAtTest?: Record<string, string>; result?: 'passed' | 'failed' | 'skipped' }> = [];
 
   if (options.report) {
     try {
@@ -30,29 +30,29 @@ export function auditCommand(options: {
         moduleId: raw.module,
         moduleName: raw.module,
         generatedAt: raw.generatedAt,
-        requirementCoverage: raw.summary?.requirementCoverage ?? 0,
-        cornerCaseCoverage: raw.summary?.cornerCaseCoverage ?? 0,
+        specCoverage: raw.summary?.specCoverage ?? 0,
+        caseCoverage: raw.summary?.caseCoverage ?? 0,
         codeCoverage: raw.summary?.codeCoverage,
-        requirements: raw.requirements ?? [],
+        specs: raw.specs ?? [],
         violations: raw.violations ?? [],
       };
 
-      // Reconstruct traces from the report's requirements
-      for (const req of raw.requirements ?? []) {
-        for (const test of req.tests ?? []) {
+      // Reconstruct traces from the report's specs
+      for (const spec of raw.specs ?? []) {
+        for (const test of spec.tests ?? []) {
           traces.push({
-            requirementIds: [req.id],
+            specIds: [spec.id],
             testTitle: test.title,
             testFile: '',
-            requirementVersionAtTest: { [req.id]: test.requirementVersionAtTest },
-            result: req.passing === true ? 'passed' : req.passing === false ? 'failed' : undefined,
+            specVersionAtTest: { [spec.id]: test.specVersionAtTest },
+            result: spec.passing === true ? 'passed' : spec.passing === false ? 'failed' : undefined,
           });
         }
-        for (const cc of req.cornerCases ?? []) {
+        for (const cc of spec.cases ?? []) {
           if (cc.covered) {
             traces.push({
-              requirementIds: [cc.id],
-              testTitle: `(corner case ${cc.id})`,
+              specIds: [cc.id],
+              testTitle: `(case ${cc.id})`,
               testFile: '',
               result: cc.passing === true ? 'passed' : cc.passing === false ? 'failed' : undefined,
             });

@@ -3,16 +3,15 @@ import type {
   TraceEntry,
   CoverageMatrix,
   Violation,
-  RequirementStatus,
 } from './model.js';
 
 export const ORPHAN_ANNOTATION = 'ORPHAN_ANNOTATION';
-export const UNCOVERED_REQUIREMENT = 'UNCOVERED_REQUIREMENT';
-export const UNCOVERED_CORNER_CASE = 'UNCOVERED_CORNER_CASE';
+export const UNCOVERED_SPEC = 'UNCOVERED_SPEC';
+export const UNCOVERED_CASE = 'UNCOVERED_CASE';
 export const DEPRECATED_REFERENCE = 'DEPRECATED_REFERENCE';
 export const SUPERSEDED_REFERENCE = 'SUPERSEDED_REFERENCE';
 export const BROKEN_SUPERSESSION = 'BROKEN_SUPERSESSION';
-export const STALE_REQUIREMENT_VERSION = 'STALE_REQUIREMENT_VERSION';
+export const STALE_SPEC_VERSION = 'STALE_SPEC_VERSION';
 export const COVERAGE_BELOW_THRESHOLD = 'COVERAGE_BELOW_THRESHOLD';
 
 export function audit(
@@ -22,21 +21,21 @@ export function audit(
 ): Violation[] {
   const violations: Violation[] = [];
 
-  const reqMap = new Map(contract.requirements.map(r => [r.id, r]));
-  const ccSet = new Set<string>();
-  for (const req of contract.requirements) {
-    for (const cc of req.cornerCases) {
-      ccSet.add(cc.id);
+  const specMap = new Map(contract.specs.map(s => [s.id, s]));
+  const caseSet = new Set<string>();
+  for (const spec of contract.specs) {
+    for (const c of spec.cases) {
+      caseSet.add(c.id);
     }
   }
-  const allKnownIds = new Set([...reqMap.keys(), ...ccSet]);
+  const allKnownIds = new Set([...specMap.keys(), ...caseSet]);
 
   // Build coverage maps from traces
-  const coveredReqIds = new Set<string>();
-  const coveredCcIds = new Set<string>();
+  const coveredSpecIds = new Set<string>();
+  const coveredCaseIds = new Set<string>();
 
   for (const trace of traces) {
-    for (const id of trace.requirementIds) {
+    for (const id of trace.specIds) {
       // ORPHAN_ANNOTATION: ID not found in CONTRACT.yaml
       if (!allKnownIds.has(id)) {
         violations.push({
@@ -48,62 +47,62 @@ export function audit(
         continue;
       }
 
-      // Check if this references a requirement directly
-      const req = reqMap.get(id);
-      if (req) {
-        coveredReqIds.add(id);
+      // Check if this references a spec directly
+      const spec = specMap.get(id);
+      if (spec) {
+        coveredSpecIds.add(id);
 
         // DEPRECATED_REFERENCE
-        if (req.status === 'deprecated') {
+        if (spec.status === 'deprecated') {
           violations.push({
             severity: 'WARN',
             type: DEPRECATED_REFERENCE,
-            requirementId: id,
+            specId: id,
             testTitle: trace.testTitle,
-            message: `Test '${trace.testTitle}' references deprecated requirement '${id}'`,
+            message: `Test '${trace.testTitle}' references deprecated spec '${id}'`,
           });
         }
 
         // SUPERSEDED_REFERENCE
-        if (req.status === 'superseded') {
+        if (spec.status === 'superseded') {
           violations.push({
             severity: 'WARN',
             type: SUPERSEDED_REFERENCE,
-            requirementId: id,
+            specId: id,
             testTitle: trace.testTitle,
-            message: `Test '${trace.testTitle}' references superseded requirement '${id}'${req.supersededBy ? ` (superseded by ${req.supersededBy})` : ''}`,
+            message: `Test '${trace.testTitle}' references superseded spec '${id}'${spec.supersededBy ? ` (superseded by ${spec.supersededBy})` : ''}`,
           });
         }
       }
 
-      // Check if it's a corner case
-      if (ccSet.has(id)) {
-        coveredCcIds.add(id);
+      // Check if it's a case
+      if (caseSet.has(id)) {
+        coveredCaseIds.add(id);
       }
     }
   }
 
-  // UNCOVERED_REQUIREMENT: approved requirement with no mapped test
-  for (const req of contract.requirements) {
-    if (req.status === 'approved' && !coveredReqIds.has(req.id)) {
+  // UNCOVERED_SPEC: approved spec with no mapped test
+  for (const spec of contract.specs) {
+    if (spec.status === 'approved' && !coveredSpecIds.has(spec.id)) {
       violations.push({
         severity: 'ERROR',
-        type: UNCOVERED_REQUIREMENT,
-        requirementId: req.id,
-        message: `Approved requirement '${req.id}' (${req.title}) has no mapped test`,
+        type: UNCOVERED_SPEC,
+        specId: spec.id,
+        message: `Approved spec '${spec.id}' (${spec.title}) has no mapped test`,
       });
     }
 
-    // UNCOVERED_CORNER_CASE: approved requirement's corner case with no mapped test
-    if (req.status === 'approved') {
-      for (const cc of req.cornerCases) {
-        if (!coveredCcIds.has(cc.id)) {
+    // UNCOVERED_CASE: approved spec's case with no mapped test
+    if (spec.status === 'approved') {
+      for (const c of spec.cases) {
+        if (!coveredCaseIds.has(c.id)) {
           violations.push({
             severity: 'WARN',
-            type: UNCOVERED_CORNER_CASE,
-            requirementId: req.id,
-            cornerCaseId: cc.id,
-            message: `Corner case '${cc.id}' (${cc.description}) has no mapped test`,
+            type: UNCOVERED_CASE,
+            specId: spec.id,
+            caseId: c.id,
+            message: `Case '${c.id}' (${c.description}) has no mapped test`,
           });
         }
       }
@@ -111,40 +110,40 @@ export function audit(
   }
 
   // BROKEN_SUPERSESSION
-  const allReqIds = new Set(contract.requirements.map(r => r.id));
-  for (const req of contract.requirements) {
-    if (req.supersededBy && !allReqIds.has(req.supersededBy)) {
+  const allSpecIds = new Set(contract.specs.map(s => s.id));
+  for (const spec of contract.specs) {
+    if (spec.supersededBy && !allSpecIds.has(spec.supersededBy)) {
       violations.push({
         severity: 'ERROR',
         type: BROKEN_SUPERSESSION,
-        requirementId: req.id,
-        message: `Requirement '${req.id}' has superseded_by '${req.supersededBy}' which does not exist`,
+        specId: spec.id,
+        message: `Spec '${spec.id}' has superseded_by '${spec.supersededBy}' which does not exist`,
       });
     }
-    if (req.supersedes && !allReqIds.has(req.supersedes)) {
+    if (spec.supersedes && !allSpecIds.has(spec.supersedes)) {
       violations.push({
         severity: 'ERROR',
         type: BROKEN_SUPERSESSION,
-        requirementId: req.id,
-        message: `Requirement '${req.id}' has supersedes '${req.supersedes}' which does not exist`,
+        specId: spec.id,
+        message: `Spec '${spec.id}' has supersedes '${spec.supersedes}' which does not exist`,
       });
     }
   }
 
-  // STALE_REQUIREMENT_VERSION: from previous report
+  // STALE_SPEC_VERSION: from previous report
   if (previousReport) {
-    for (const prevReq of previousReport.requirements) {
-      const currentReq = reqMap.get(prevReq.id);
-      if (!currentReq) continue;
+    for (const prevSpec of previousReport.specs) {
+      const currentSpec = specMap.get(prevSpec.id);
+      if (!currentSpec) continue;
 
-      for (const test of prevReq.tests) {
-        if (test.requirementVersionAtTest && test.requirementVersionAtTest !== currentReq.version) {
+      for (const test of prevSpec.tests) {
+        if (test.specVersionAtTest && test.specVersionAtTest !== currentSpec.version) {
           violations.push({
             severity: 'WARN',
-            type: STALE_REQUIREMENT_VERSION,
-            requirementId: prevReq.id,
+            type: STALE_SPEC_VERSION,
+            specId: prevSpec.id,
             testTitle: test.title,
-            message: `Test '${test.title}' was verified against '${prevReq.id}' v${test.requirementVersionAtTest} but CONTRACT.yaml is now v${currentReq.version}`,
+            message: `Test '${test.title}' was verified against '${prevSpec.id}' v${test.specVersionAtTest} but CONTRACT.yaml is now v${currentSpec.version}`,
           });
         }
       }

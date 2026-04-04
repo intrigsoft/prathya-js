@@ -3,13 +3,13 @@ import type {
   ModuleContract,
   TraceEntry,
   CoverageMatrix,
-  RequirementCoverage,
-  CornerCaseCoverage,
-  RequirementStatus,
+  SpecCoverage,
+  CaseCoverage,
+  SpecStatus,
 } from './model.js';
 
 export interface CoverageOptions {
-  excludeStatuses?: RequirementStatus[];
+  excludeStatuses?: SpecStatus[];
   codeCoverageSummaryPath?: string;
 }
 
@@ -20,73 +20,82 @@ export function computeCoverage(
 ): CoverageMatrix {
   const excludeStatuses = options?.excludeStatuses ?? ['deprecated', 'superseded'];
 
-  const activeRequirements = contract.requirements.filter(
-    r => !excludeStatuses.includes(r.status),
+  const activeSpecs = contract.specs.filter(
+    s => !excludeStatuses.includes(s.status),
   );
 
-  // Build a map: requirement/corner-case ID → traces that reference it
-  const tracesByReqId = new Map<string, TraceEntry[]>();
+  // Build a map: spec/case ID → traces that reference it
+  const tracesBySpecId = new Map<string, TraceEntry[]>();
   for (const trace of traces) {
-    for (const id of trace.requirementIds) {
-      const existing = tracesByReqId.get(id);
+    for (const id of trace.specIds) {
+      const existing = tracesBySpecId.get(id);
       if (existing) {
         existing.push(trace);
       } else {
-        tracesByReqId.set(id, [trace]);
+        tracesBySpecId.set(id, [trace]);
       }
     }
   }
 
-  const reqCoverages: RequirementCoverage[] = activeRequirements.map(req => {
-    const reqTraces = tracesByReqId.get(req.id) ?? [];
-    const covered = reqTraces.length > 0;
+  const specCoverages: SpecCoverage[] = activeSpecs.map(spec => {
+    const specTraces = tracesBySpecId.get(spec.id) ?? [];
+    // "covered" = has linked tests (traceability)
+    const covered = specTraces.length > 0;
 
     let passing: boolean | null = null;
     if (covered) {
-      const hasFailure = reqTraces.some(t => t.result === 'failed');
+      const hasFailure = specTraces.some(t => t.result === 'failed');
       passing = !hasFailure;
     }
 
-    const tests = reqTraces.map(t => ({
+    const tests = specTraces.map(t => ({
       title: t.testTitle,
-      requirementVersionAtTest: t.requirementVersionAtTest?.[req.id] ?? req.version,
+      specVersionAtTest: t.specVersionAtTest?.[spec.id] ?? spec.version,
     }));
 
-    const cornerCases: CornerCaseCoverage[] = req.cornerCases.map(cc => {
-      const ccTraces = tracesByReqId.get(cc.id) ?? [];
-      const ccCovered = ccTraces.length > 0;
-      let ccPassing: boolean | null = null;
-      if (ccCovered) {
-        ccPassing = !ccTraces.some(t => t.result === 'failed');
+    const cases: CaseCoverage[] = spec.cases.map(c => {
+      const caseTraces = tracesBySpecId.get(c.id) ?? [];
+      const caseCovered = caseTraces.length > 0;
+      let casePassing: boolean | null = null;
+      if (caseCovered) {
+        casePassing = !caseTraces.some(t => t.result === 'failed');
       }
-      return { id: cc.id, covered: ccCovered, passing: ccPassing };
+      return { id: c.id, covered: caseCovered, passing: casePassing };
     });
 
     return {
-      id: req.id,
-      title: req.title,
-      version: req.version,
-      status: req.status,
+      id: spec.id,
+      title: spec.title,
+      version: spec.version,
+      status: spec.status,
       covered,
       passing,
       tests,
-      cornerCases,
+      cases,
     };
   });
 
-  const totalActive = activeRequirements.length;
-  const coveredCount = reqCoverages.filter(r => r.covered).length;
-  const requirementCoverage = totalActive > 0
+  const totalActive = activeSpecs.length;
+  const coveredCount = specCoverages.filter(s => s.covered).length;
+  const specCoverage = totalActive > 0
     ? Math.round((coveredCount / totalActive) * 1000) / 10
     : 0;
 
-  const totalCornerCases = activeRequirements.reduce((sum, r) => sum + r.cornerCases.length, 0);
-  const coveredCornerCases = reqCoverages.reduce(
-    (sum, r) => sum + r.cornerCases.filter(cc => cc.covered).length,
+  const totalCases = activeSpecs.reduce((sum, s) => sum + s.cases.length, 0);
+  const coveredCases = specCoverages.reduce(
+    (sum, s) => sum + s.cases.filter(c => c.covered).length,
     0,
   );
-  const cornerCaseCoverage = totalCornerCases > 0
-    ? Math.round((coveredCornerCases / totalCornerCases) * 1000) / 10
+  const caseCoverage = totalCases > 0
+    ? Math.round((coveredCases / totalCases) * 1000) / 10
+    : 0;
+
+  const passingCases = specCoverages.reduce(
+    (sum, s) => sum + s.cases.filter(c => c.passing === true).length,
+    0,
+  );
+  const passingCaseCoverage = totalCases > 0
+    ? Math.round((passingCases / totalCases) * 1000) / 10
     : 0;
 
   let codeCoverage: number | undefined;
@@ -98,10 +107,11 @@ export function computeCoverage(
     moduleId: contract.moduleId,
     moduleName: contract.moduleName,
     generatedAt: new Date().toISOString(),
-    requirementCoverage,
-    cornerCaseCoverage,
+    specCoverage,
+    caseCoverage,
+    passingCaseCoverage,
     codeCoverage,
-    requirements: reqCoverages,
+    specs: specCoverages,
     violations: [],
   };
 }

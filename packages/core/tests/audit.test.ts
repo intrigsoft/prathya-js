@@ -2,7 +2,7 @@ import { describe } from 'vitest';
 import { test, expect } from '@intrigsoft/pratya-vitest';
 import * as path from 'node:path';
 import { parseContract } from '../src/parser.js';
-import { audit, ORPHAN_ANNOTATION, UNCOVERED_REQUIREMENT, UNCOVERED_CORNER_CASE, DEPRECATED_REFERENCE, SUPERSEDED_REFERENCE, BROKEN_SUPERSESSION, STALE_REQUIREMENT_VERSION } from '../src/audit.js';
+import { audit, ORPHAN_ANNOTATION, UNCOVERED_SPEC, UNCOVERED_CASE, DEPRECATED_REFERENCE, SUPERSEDED_REFERENCE, BROKEN_SUPERSESSION, STALE_SPEC_VERSION } from '../src/audit.js';
 import type { TraceEntry, CoverageMatrix } from '../src/model.js';
 
 const FIXTURE_DIR = path.resolve(__dirname, 'fixtures');
@@ -12,11 +12,11 @@ function loadContract() {
 }
 
 describe('audit', () => {
-  test('emits ORPHAN_ANNOTATION for unknown IDs', ({ requirement }) => {
-    requirement('PRATYA-003');
+  test('emits ORPHAN_ANNOTATION for unknown IDs', ({ spec }) => {
+    spec('PRATYA-003');
     const contract = loadContract();
     const traces: TraceEntry[] = [
-      { requirementIds: ['AUTH-999'], testTitle: 'orphan test', testFile: 'a.ts', result: 'passed' },
+      { specIds: ['AUTH-999'], testTitle: 'orphan test', testFile: 'a.ts', result: 'passed' },
     ];
 
     const violations = audit(contract, traces);
@@ -26,42 +26,42 @@ describe('audit', () => {
     expect(orphan!.message).toContain('AUTH-999');
   });
 
-  test('emits UNCOVERED_REQUIREMENT for approved requirements with no tests', ({ requirement }) => {
-    requirement('PRATYA-003');
+  test('emits UNCOVERED_SPEC for approved specs with no tests', ({ spec }) => {
+    spec('PRATYA-003');
     const contract = loadContract();
     const violations = audit(contract, []);
-    const uncovered = violations.filter(v => v.type === UNCOVERED_REQUIREMENT);
+    const uncovered = violations.filter(v => v.type === UNCOVERED_SPEC);
     expect(uncovered).toHaveLength(3);
     expect(uncovered.every(v => v.severity === 'ERROR')).toBe(true);
   });
 
-  test('emits UNCOVERED_CORNER_CASE for approved corner cases with no tests', ({ requirement }) => {
-    requirement('PRATYA-003');
+  test('emits UNCOVERED_CASE for approved cases with no tests', ({ spec }) => {
+    spec('PRATYA-003');
     const contract = loadContract();
     const traces: TraceEntry[] = [
-      { requirementIds: ['AUTH-001'], testTitle: 'login', testFile: 'a.ts', result: 'passed' },
-      { requirementIds: ['AUTH-002'], testTitle: 'refresh', testFile: 'a.ts', result: 'passed' },
-      { requirementIds: ['AUTH-005'], testTitle: 'reset', testFile: 'a.ts', result: 'passed' },
+      { specIds: ['AUTH-001'], testTitle: 'login', testFile: 'a.ts', result: 'passed' },
+      { specIds: ['AUTH-002'], testTitle: 'refresh', testFile: 'a.ts', result: 'passed' },
+      { specIds: ['AUTH-005'], testTitle: 'reset', testFile: 'a.ts', result: 'passed' },
     ];
 
     const violations = audit(contract, traces);
-    const uncoveredCC = violations.filter(v => v.type === UNCOVERED_CORNER_CASE);
+    const uncoveredCC = violations.filter(v => v.type === UNCOVERED_CASE);
     expect(uncoveredCC).toHaveLength(6);
     expect(uncoveredCC.every(v => v.severity === 'WARN')).toBe(true);
   });
 
-  test('emits DEPRECATED_REFERENCE when referencing deprecated requirement', ({ requirement }) => {
-    requirement('PRATYA-003-CC-001');
+  test('emits DEPRECATED_REFERENCE when referencing deprecated spec', ({ spec }) => {
+    spec('PRATYA-003-CC-001');
     const contract = loadContract();
     const modifiedContract = {
       ...contract,
-      requirements: contract.requirements.map(r =>
-        r.id === 'AUTH-003' ? { ...r, status: 'deprecated' as const } : r,
+      specs: contract.specs.map(s =>
+        s.id === 'AUTH-003' ? { ...s, status: 'deprecated' as const } : s,
       ),
     };
 
     const traces: TraceEntry[] = [
-      { requirementIds: ['AUTH-003'], testTitle: 'old test', testFile: 'a.ts', result: 'passed' },
+      { specIds: ['AUTH-003'], testTitle: 'old test', testFile: 'a.ts', result: 'passed' },
     ];
 
     const violations = audit(modifiedContract, traces);
@@ -70,11 +70,11 @@ describe('audit', () => {
     expect(deprecated!.severity).toBe('WARN');
   });
 
-  test('emits SUPERSEDED_REFERENCE when referencing superseded requirement', ({ requirement }) => {
-    requirement('PRATYA-003-CC-002');
+  test('emits SUPERSEDED_REFERENCE when referencing superseded spec', ({ spec }) => {
+    spec('PRATYA-003-CC-002');
     const contract = loadContract();
     const traces: TraceEntry[] = [
-      { requirementIds: ['AUTH-003'], testTitle: 'old test', testFile: 'a.ts', result: 'passed' },
+      { specIds: ['AUTH-003'], testTitle: 'old test', testFile: 'a.ts', result: 'passed' },
     ];
 
     const violations = audit(contract, traces);
@@ -84,11 +84,11 @@ describe('audit', () => {
     expect(superseded!.message).toContain('AUTH-005');
   });
 
-  test('emits BROKEN_SUPERSESSION for non-existent superseded_by target', ({ requirement }) => {
-    requirement('PRATYA-003-CC-003');
+  test('emits BROKEN_SUPERSESSION for non-existent superseded_by target', ({ spec }) => {
+    spec('PRATYA-003-CC-003');
     const contract = {
       ...loadContract(),
-      requirements: [
+      specs: [
         {
           id: 'AUTH-001',
           version: '1.0.0',
@@ -97,7 +97,7 @@ describe('audit', () => {
           title: 'Test',
           description: 'Test',
           acceptanceCriteria: [],
-          cornerCases: [],
+          cases: [],
           changelog: [],
         },
       ],
@@ -110,16 +110,17 @@ describe('audit', () => {
     expect(broken!.message).toContain('AUTH-999');
   });
 
-  test('emits STALE_REQUIREMENT_VERSION from previous report', ({ requirement }) => {
-    requirement('PRATYA-003-CC-004');
+  test('emits STALE_SPEC_VERSION from previous report', ({ spec }) => {
+    spec('PRATYA-003-CC-004');
     const contract = loadContract();
     const previousReport: CoverageMatrix = {
       moduleId: 'AUTH',
       moduleName: 'Auth',
       generatedAt: '2026-01-01',
-      requirementCoverage: 100,
-      cornerCaseCoverage: 100,
-      requirements: [
+      specCoverage: 100,
+      caseCoverage: 100,
+      passingCaseCoverage: 100,
+      specs: [
         {
           id: 'AUTH-001',
           title: 'Login',
@@ -127,34 +128,34 @@ describe('audit', () => {
           status: 'approved',
           covered: true,
           passing: true,
-          tests: [{ title: 'login test', requirementVersionAtTest: '1.0.0' }],
-          cornerCases: [],
+          tests: [{ title: 'login test', specVersionAtTest: '1.0.0' }],
+          cases: [],
         },
       ],
       violations: [],
     };
 
     const violations = audit(contract, [], previousReport);
-    const stale = violations.find(v => v.type === STALE_REQUIREMENT_VERSION);
+    const stale = violations.find(v => v.type === STALE_SPEC_VERSION);
     expect(stale).toBeDefined();
     expect(stale!.severity).toBe('WARN');
     expect(stale!.message).toContain('v1.0.0');
     expect(stale!.message).toContain('v1.1.0');
   });
 
-  test('does not emit false positives when everything is properly covered', ({ requirement }) => {
-    requirement('PRATYA-003-CC-005');
+  test('does not emit false positives when everything is properly covered', ({ spec }) => {
+    spec('PRATYA-003-CC-005');
     const contract = loadContract();
     const traces: TraceEntry[] = [
-      { requirementIds: ['AUTH-001'], testTitle: 'login', testFile: 'a.ts', result: 'passed' },
-      { requirementIds: ['AUTH-001-CC-001'], testTitle: 'cc1', testFile: 'a.ts', result: 'passed' },
-      { requirementIds: ['AUTH-001-CC-002'], testTitle: 'cc2', testFile: 'a.ts', result: 'passed' },
-      { requirementIds: ['AUTH-001-CC-003'], testTitle: 'cc3', testFile: 'a.ts', result: 'passed' },
-      { requirementIds: ['AUTH-002'], testTitle: 'refresh', testFile: 'a.ts', result: 'passed' },
-      { requirementIds: ['AUTH-002-CC-001'], testTitle: 'cc4', testFile: 'a.ts', result: 'passed' },
-      { requirementIds: ['AUTH-005'], testTitle: 'reset', testFile: 'a.ts', result: 'passed' },
-      { requirementIds: ['AUTH-005-CC-001'], testTitle: 'cc5', testFile: 'a.ts', result: 'passed' },
-      { requirementIds: ['AUTH-005-CC-002'], testTitle: 'cc6', testFile: 'a.ts', result: 'passed' },
+      { specIds: ['AUTH-001'], testTitle: 'login', testFile: 'a.ts', result: 'passed' },
+      { specIds: ['AUTH-001-CC-001'], testTitle: 'cc1', testFile: 'a.ts', result: 'passed' },
+      { specIds: ['AUTH-001-CC-002'], testTitle: 'cc2', testFile: 'a.ts', result: 'passed' },
+      { specIds: ['AUTH-001-CC-003'], testTitle: 'cc3', testFile: 'a.ts', result: 'passed' },
+      { specIds: ['AUTH-002'], testTitle: 'refresh', testFile: 'a.ts', result: 'passed' },
+      { specIds: ['AUTH-002-CC-001'], testTitle: 'cc4', testFile: 'a.ts', result: 'passed' },
+      { specIds: ['AUTH-005'], testTitle: 'reset', testFile: 'a.ts', result: 'passed' },
+      { specIds: ['AUTH-005-CC-001'], testTitle: 'cc5', testFile: 'a.ts', result: 'passed' },
+      { specIds: ['AUTH-005-CC-002'], testTitle: 'cc6', testFile: 'a.ts', result: 'passed' },
     ];
 
     const violations = audit(contract, traces);

@@ -1,11 +1,11 @@
-import type { RequirementStatus } from '@intrigsoft/pratya-core';
+import type { SpecStatus } from '@intrigsoft/pratya-core';
 
 export interface PratyaVitestReporterOptions {
   contractPath?: string;
   outputDir?: string;
   failOnViolations?: boolean;
-  minimumRequirementCoverage?: number;
-  excludeStatuses?: RequirementStatus[];
+  minimumSpecCoverage?: number;
+  excludeStatuses?: SpecStatus[];
   codeCoverage?: { summaryPath: string };
 }
 

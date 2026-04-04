@@ -5,7 +5,7 @@ import {
   writeTraces,
 } from '@intrigsoft/pratya-core';
 import type {
-  RequirementStatus,
+  SpecStatus,
   TraceEntry,
   TestResult,
   IntegrationReporterOptions,
@@ -15,8 +15,8 @@ export interface PratyaVitestReporterOptions {
   contractPath?: string;
   outputDir?: string;
   failOnViolations?: boolean;
-  minimumRequirementCoverage?: number;
-  excludeStatuses?: RequirementStatus[];
+  minimumSpecCoverage?: number;
+  excludeStatuses?: SpecStatus[];
   codeCoverage?: { summaryPath: string };
   /**
    * When true (default), the reporter only writes trace entries to
@@ -75,7 +75,7 @@ class PratyaVitestReporter {
       contractPath: options?.contractPath,
       outputDir: options?.outputDir,
       failOnViolations: options?.failOnViolations,
-      minimumRequirementCoverage: options?.minimumRequirementCoverage,
+      minimumSpecCoverage: options?.minimumSpecCoverage,
       excludeStatuses: options?.excludeStatuses,
       codeCoverage: options?.codeCoverage,
     });
@@ -109,27 +109,27 @@ class PratyaVitestReporter {
     for (const file of files) {
       const tests = collectTests(file.tasks);
       for (const task of tests) {
-        const meta = task.meta?.pratya as { requirementIds?: string[] } | undefined;
-        if (!meta?.requirementIds || meta.requirementIds.length === 0) continue;
+        const meta = task.meta?.pratya as { specIds?: string[] } | undefined;
+        if (!meta?.specIds || meta.specIds.length === 0) continue;
 
-        const requirementIds = meta.requirementIds;
+        const specIds = meta.specIds;
 
-        let requirementVersionAtTest: Record<string, string> | undefined;
+        let specVersionAtTest: Record<string, string> | undefined;
         if (contract) {
-          requirementVersionAtTest = {};
-          for (const id of requirementIds) {
-            const req = contract.requirements.find(r => r.id === id);
-            if (req) {
-              requirementVersionAtTest[id] = req.version;
+          specVersionAtTest = {};
+          for (const id of specIds) {
+            const spec = contract.specs.find(r => r.id === id);
+            if (spec) {
+              specVersionAtTest[id] = spec.version;
             }
           }
         }
 
         traces.push({
-          requirementIds,
+          specIds,
           testTitle: task.name,
           testFile: file.filepath,
-          requirementVersionAtTest,
+          specVersionAtTest,
           result: toTestResult(task.result?.state),
         });
       }
