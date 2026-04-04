@@ -15,6 +15,10 @@ coverage/
 .DS_Store
 Thumbs.db
 
+# Docs build output
+site-output/
+site/site-output/
+
 # Env
 .env
 .env.*

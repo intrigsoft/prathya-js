@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+    <defs>
+        <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+            <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#000000" flood-opacity="0.3"/>
+        </filter>
+        <filter id="glow">
+            <feGaussianBlur stdDeviation="1.5" result="blur"/>
+            <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
+    </defs>
+
+    <!-- Dracula background -->
+    <rect x="2" y="2" width="60" height="60" rx="14" ry="14"
+          fill="#282A36" filter="url(#shadow)"/>
+
+    <!-- Sinhala ප්‍ර character -->
+    <text
+            x="32"
+            y="40"
+            font-family="Noto Serif Sinhala, Iskoola Pota, serif"
+            font-size="38"
+            font-weight="300"
+            text-anchor="middle"
+            fill="#F8F8F2"
+            filter="url(#glow)"
+    >ප්‍ර</text>
+</svg>
