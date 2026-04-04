@@ -144,8 +144,11 @@ export function writeHtmlReport(matrix: CoverageMatrix, outputDir: string, contr
 }
 
 function resolveTemplatePath(): string {
-  // Works in both ESM (dist) and test contexts
-  const currentDir = path.dirname(fileURLToPath(import.meta.url));
+  // Works in both ESM and CJS contexts
+  const currentDir =
+    typeof __dirname !== 'undefined'
+      ? __dirname
+      : path.dirname(fileURLToPath(import.meta.url));
   // Check if we're in dist/ or src/
   const templatesFromDist = path.resolve(currentDir, '..', 'templates', 'report.html.mustache');
   const templatesFromSrc = path.resolve(currentDir, '..', '..', 'templates', 'report.html.mustache');
