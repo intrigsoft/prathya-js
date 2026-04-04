@@ -1,6 +1,6 @@
 {
   "name": "@intrigsoft/pratya",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "CLI for Pratya requirement coverage framework",
   "type": "module",
   "bin": {
