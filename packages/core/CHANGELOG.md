@@ -1,5 +1,11 @@
 # @intrigsoft/pratya-core
 
+## 0.0.5
+
+### Patch Changes
+
+- [`06aaf9d`](https://github.com/intrigsoft/prathya-js/commit/06aaf9de276af2d331da695d5318b26c9aa5c2eb) - Fix requirement id format.
+
 ## 0.0.4
 
 ### Patch Changes

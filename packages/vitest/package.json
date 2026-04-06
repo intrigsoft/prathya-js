@@ -1,6 +1,6 @@
 {
   "name": "@intrigsoft/pratya-vitest",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Vitest integration for Pratya requirement coverage",
   "type": "module",
   "main": "./dist/index.cjs",
