@@ -33,6 +33,7 @@ Key rules:
 - Version bumps: major = breaking, minor = additive, patch = wording only
 - Every approved spec should have at least one test
 - Cases are first-class — each gets its own ID and coverage tracking
+- Code (line) coverage can be integrated by pointing to an Istanbul/V8 coverage-summary.json file
 
 Use the tools below to read, modify, and audit the contract. Always check get_contract or list_specs before making changes.`,
 });
@@ -181,22 +182,28 @@ server.tool(
 
 server.tool(
   'get_coverage_matrix',
-  'Get the full coverage matrix — a three-state view of every spec and case: covered+passing, covered+failing, or not covered.',
-  { contract_file: z.string().optional().describe('Path to CONTRACT.yaml') },
-  async ({ contract_file }) => {
+  'Get the full coverage matrix — a three-state view of every spec and case: covered+passing, covered+failing, or not covered. Optionally includes line coverage from Istanbul/V8.',
+  {
+    contract_file: z.string().optional().describe('Path to CONTRACT.yaml'),
+    coverage_summary: z.string().optional().describe('Path to Istanbul/V8 coverage-summary.json for line coverage'),
+  },
+  async ({ contract_file, coverage_summary }) => {
     return safeCall(() => {
       const contractPath = contract_file ?? DEFAULT_CONTRACT;
       const contract = parseContract(contractPath);
       const traces = loadTraces(contractPath);
-      const matrix = computeCoverage(contract, traces);
+      const matrix = computeCoverage(contract, traces, {
+        codeCoverageSummaryPath: coverage_summary,
+      });
 
       const lines = [
         `Coverage Matrix — ${contract.moduleId}`,
         `Spec Coverage: ${matrix.specCoverage}% (${matrix.specs.filter(r => r.covered).length}/${matrix.specs.length})`,
         `Case Coverage: ${matrix.caseCoverage}%`,
         `Passing Case Coverage: ${matrix.passingCaseCoverage}%`,
+        matrix.codeCoverage !== undefined ? `Line Coverage: ${matrix.codeCoverage}%` : '',
         '',
-      ];
+      ].filter(Boolean);
 
       for (const spec of matrix.specs) {
         const state = spec.passing === null ? 'NOT COVERED' : spec.passing ? 'PASSING' : 'FAILING';
