@@ -17,11 +17,11 @@ specs:
       - Valid credentials return a signed JWT access token and refresh token
       - Access token expiry is set to 15 minutes
     cases:
-      - id: AUTH-001-CC-001
+      - id: AUTH-001-TC-001
         description: Email valid but password incorrect — must return 401
-      - id: AUTH-001-CC-002
+      - id: AUTH-001-TC-002
         description: Unknown email — response must be identical to wrong password
-      - id: AUTH-001-CC-003
+      - id: AUTH-001-TC-003
         description: Email in mixed case — must be normalized
     changelog:
       - version: 1.0.0
@@ -41,7 +41,7 @@ specs:
       - Valid refresh token returns a new access token
       - Original refresh token is rotated
     cases:
-      - id: AUTH-002-CC-001
+      - id: AUTH-002-TC-001
         description: Refresh token used twice — second use must fail
     changelog:
       - version: 1.0.0
@@ -74,9 +74,9 @@ specs:
       - Reset link is valid for 15 minutes
       - If MFA is enabled, OTP verification required before reset
     cases:
-      - id: AUTH-005-CC-001
+      - id: AUTH-005-TC-001
         description: Reset link used after expiry — must return 410 Gone
-      - id: AUTH-005-CC-002
+      - id: AUTH-005-TC-002
         description: User attempts reset while logged in — session must be invalidated
     changelog:
       - version: 1.0.0

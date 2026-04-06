@@ -12,6 +12,7 @@ export type {
   Violation,
   CoverageMatrix,
 } from './model.js';
+export { DEFAULT_SPEC_ID_PATTERN, DEFAULT_CASE_ID_PATTERN } from './model.js';
 
 export { parseContract, parseContractYaml } from './parser.js';
 export { computeCoverage } from './coverage.js';

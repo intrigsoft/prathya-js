@@ -254,10 +254,10 @@ function generateCaseId(spec: RawSpec): string {
   const cases = spec.cases ?? [];
   const existingNums = cases
     .map(c => {
-      const match = c.id.match(/-CC-(\d+)$/);
+      const match = c.id.match(/-TC-(\d+)$/);
       return match ? parseInt(match[1], 10) : 0;
     })
     .filter(n => n > 0);
   const next = existingNums.length > 0 ? Math.max(...existingNums) + 1 : 1;
-  return `${specId}-CC-${String(next).padStart(3, '0')}`;
+  return `${specId}-TC-${String(next).padStart(3, '0')}`;
 }

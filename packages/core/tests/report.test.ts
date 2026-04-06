@@ -25,8 +25,8 @@ function makeSampleMatrix(): CoverageMatrix {
         passing: true,
         tests: [{ title: 'login test', specVersionAtTest: '1.1.0' }],
         cases: [
-          { id: 'AUTH-001-CC-001', covered: true, passing: true },
-          { id: 'AUTH-001-CC-002', covered: false, passing: null },
+          { id: 'AUTH-001-TC-001', covered: true, passing: true },
+          { id: 'AUTH-001-TC-002', covered: false, passing: null },
         ],
       },
       {
@@ -48,7 +48,7 @@ function makeSampleMatrix(): CoverageMatrix {
         passing: null,
         tests: [],
         cases: [
-          { id: 'AUTH-005-CC-001', covered: false, passing: null },
+          { id: 'AUTH-005-TC-001', covered: false, passing: null },
         ],
       },
     ],
@@ -63,8 +63,8 @@ function makeSampleMatrix(): CoverageMatrix {
         severity: 'WARN',
         type: 'UNCOVERED_CASE',
         specId: 'AUTH-001',
-        caseId: 'AUTH-001-CC-002',
-        message: "Case 'AUTH-001-CC-002' has no mapped test",
+        caseId: 'AUTH-001-TC-002',
+        message: "Case 'AUTH-001-TC-002' has no mapped test",
       },
     ],
   };
@@ -112,7 +112,7 @@ describe('writeJsonReport', () => {
 
 describe('writeHtmlReport', () => {
   test('generates an HTML file with key markers', ({ spec }) => {
-    spec(['PRATYA-004', 'PRATYA-004-CC-001']);
+    spec(['PRATYA-004', 'PRATYA-004-TC-001']);
     const matrix = makeSampleMatrix();
     writeHtmlReport(matrix, tmpDir);
 

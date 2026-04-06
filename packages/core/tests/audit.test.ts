@@ -51,7 +51,7 @@ describe('audit', () => {
   });
 
   test('emits DEPRECATED_REFERENCE when referencing deprecated spec', ({ spec }) => {
-    spec('PRATYA-003-CC-001');
+    spec('PRATYA-003-TC-001');
     const contract = loadContract();
     const modifiedContract = {
       ...contract,
@@ -71,7 +71,7 @@ describe('audit', () => {
   });
 
   test('emits SUPERSEDED_REFERENCE when referencing superseded spec', ({ spec }) => {
-    spec('PRATYA-003-CC-002');
+    spec('PRATYA-003-TC-002');
     const contract = loadContract();
     const traces: TraceEntry[] = [
       { specIds: ['AUTH-003'], testTitle: 'old test', testFile: 'a.ts', result: 'passed' },
@@ -85,7 +85,7 @@ describe('audit', () => {
   });
 
   test('emits BROKEN_SUPERSESSION for non-existent superseded_by target', ({ spec }) => {
-    spec('PRATYA-003-CC-003');
+    spec('PRATYA-003-TC-003');
     const contract = {
       ...loadContract(),
       specs: [
@@ -111,7 +111,7 @@ describe('audit', () => {
   });
 
   test('emits STALE_SPEC_VERSION from previous report', ({ spec }) => {
-    spec('PRATYA-003-CC-004');
+    spec('PRATYA-003-TC-004');
     const contract = loadContract();
     const previousReport: CoverageMatrix = {
       moduleId: 'AUTH',
@@ -144,18 +144,18 @@ describe('audit', () => {
   });
 
   test('does not emit false positives when everything is properly covered', ({ spec }) => {
-    spec('PRATYA-003-CC-005');
+    spec('PRATYA-003-TC-005');
     const contract = loadContract();
     const traces: TraceEntry[] = [
       { specIds: ['AUTH-001'], testTitle: 'login', testFile: 'a.ts', result: 'passed' },
-      { specIds: ['AUTH-001-CC-001'], testTitle: 'cc1', testFile: 'a.ts', result: 'passed' },
-      { specIds: ['AUTH-001-CC-002'], testTitle: 'cc2', testFile: 'a.ts', result: 'passed' },
-      { specIds: ['AUTH-001-CC-003'], testTitle: 'cc3', testFile: 'a.ts', result: 'passed' },
+      { specIds: ['AUTH-001-TC-001'], testTitle: 'cc1', testFile: 'a.ts', result: 'passed' },
+      { specIds: ['AUTH-001-TC-002'], testTitle: 'cc2', testFile: 'a.ts', result: 'passed' },
+      { specIds: ['AUTH-001-TC-003'], testTitle: 'cc3', testFile: 'a.ts', result: 'passed' },
       { specIds: ['AUTH-002'], testTitle: 'refresh', testFile: 'a.ts', result: 'passed' },
-      { specIds: ['AUTH-002-CC-001'], testTitle: 'cc4', testFile: 'a.ts', result: 'passed' },
+      { specIds: ['AUTH-002-TC-001'], testTitle: 'cc4', testFile: 'a.ts', result: 'passed' },
       { specIds: ['AUTH-005'], testTitle: 'reset', testFile: 'a.ts', result: 'passed' },
-      { specIds: ['AUTH-005-CC-001'], testTitle: 'cc5', testFile: 'a.ts', result: 'passed' },
-      { specIds: ['AUTH-005-CC-002'], testTitle: 'cc6', testFile: 'a.ts', result: 'passed' },
+      { specIds: ['AUTH-005-TC-001'], testTitle: 'cc5', testFile: 'a.ts', result: 'passed' },
+      { specIds: ['AUTH-005-TC-002'], testTitle: 'cc6', testFile: 'a.ts', result: 'passed' },
     ];
 
     const violations = audit(contract, traces);

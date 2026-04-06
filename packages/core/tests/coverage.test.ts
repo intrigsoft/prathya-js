@@ -41,7 +41,7 @@ describe('computeCoverage', () => {
         result: 'passed',
       },
       {
-        specIds: ['AUTH-001-CC-001'],
+        specIds: ['AUTH-001-TC-001'],
         testTitle: 'wrong password test',
         testFile: 'auth.test.ts',
         result: 'passed',
@@ -68,7 +68,7 @@ describe('computeCoverage', () => {
   });
 
   test('marks passing correctly — all pass = true', ({ spec }) => {
-    spec('PRATYA-002-CC-001');
+    spec('PRATYA-002-TC-001');
     const contract = loadContract();
     const traces: TraceEntry[] = [
       { specIds: ['AUTH-001'], testTitle: 'test1', testFile: 'a.ts', result: 'passed' },
@@ -82,7 +82,7 @@ describe('computeCoverage', () => {
   });
 
   test('marks passing correctly — any fail = false', ({ spec }) => {
-    spec('PRATYA-002-CC-002');
+    spec('PRATYA-002-TC-002');
     const contract = loadContract();
     const traces: TraceEntry[] = [
       { specIds: ['AUTH-001'], testTitle: 'test1', testFile: 'a.ts', result: 'passed' },
@@ -95,7 +95,7 @@ describe('computeCoverage', () => {
   });
 
   test('marks passing as null when no tests', ({ spec }) => {
-    spec('PRATYA-002-CC-003');
+    spec('PRATYA-002-TC-003');
     const contract = loadContract();
     const matrix = computeCoverage(contract, []);
     const auth001 = matrix.specs.find(s => s.id === 'AUTH-001')!;
@@ -103,23 +103,23 @@ describe('computeCoverage', () => {
   });
 
   test('passingCaseCoverage differs from caseCoverage when cases have failures', ({ spec }) => {
-    spec('PRATYA-002-CC-002');
+    spec('PRATYA-002-TC-002');
     const contract = loadContract();
     const traces: TraceEntry[] = [
-      { specIds: ['AUTH-001-CC-001'], testTitle: 'cc1', testFile: 'a.ts', result: 'passed' },
-      { specIds: ['AUTH-001-CC-002'], testTitle: 'cc2', testFile: 'a.ts', result: 'failed' },
-      { specIds: ['AUTH-001-CC-003'], testTitle: 'cc3', testFile: 'a.ts', result: 'passed' },
+      { specIds: ['AUTH-001-TC-001'], testTitle: 'cc1', testFile: 'a.ts', result: 'passed' },
+      { specIds: ['AUTH-001-TC-002'], testTitle: 'cc2', testFile: 'a.ts', result: 'failed' },
+      { specIds: ['AUTH-001-TC-003'], testTitle: 'cc3', testFile: 'a.ts', result: 'passed' },
     ];
 
     const matrix = computeCoverage(contract, traces);
     // 3/6 cases have linked tests
     expect(matrix.caseCoverage).toBe(50);
-    // 2/6 cases have all-passing tests (AUTH-001-CC-002 is failing)
+    // 2/6 cases have all-passing tests (AUTH-001-TC-002 is failing)
     expect(matrix.passingCaseCoverage).toBeCloseTo(33.3, 0);
   });
 
   test('reads code coverage from Istanbul summary', ({ spec }) => {
-    spec('PRATYA-002-CC-004');
+    spec('PRATYA-002-TC-004');
     const contract = loadContract();
     const matrix = computeCoverage(contract, [], {
       codeCoverageSummaryPath: path.join(FIXTURE_DIR, 'coverage-summary.json'),
@@ -128,7 +128,7 @@ describe('computeCoverage', () => {
   });
 
   test('returns undefined codeCoverage when file missing', ({ spec }) => {
-    spec('PRATYA-002-CC-005');
+    spec('PRATYA-002-TC-005');
     const contract = loadContract();
     const matrix = computeCoverage(contract, [], {
       codeCoverageSummaryPath: '/nonexistent/coverage.json',
@@ -137,25 +137,25 @@ describe('computeCoverage', () => {
   });
 
   test('computes case coverage correctly', ({ spec }) => {
-    spec('PRATYA-002-CC-006');
+    spec('PRATYA-002-TC-006');
     const contract = loadContract();
     const traces: TraceEntry[] = [
-      { specIds: ['AUTH-001-CC-001'], testTitle: 'cc1', testFile: 'a.ts', result: 'passed' },
-      { specIds: ['AUTH-001-CC-002'], testTitle: 'cc2', testFile: 'a.ts', result: 'passed' },
-      { specIds: ['AUTH-001-CC-003'], testTitle: 'cc3', testFile: 'a.ts', result: 'failed' },
-      { specIds: ['AUTH-002-CC-001'], testTitle: 'cc4', testFile: 'a.ts', result: 'passed' },
-      { specIds: ['AUTH-005-CC-001'], testTitle: 'cc5', testFile: 'a.ts', result: 'passed' },
-      { specIds: ['AUTH-005-CC-002'], testTitle: 'cc6', testFile: 'a.ts', result: 'passed' },
+      { specIds: ['AUTH-001-TC-001'], testTitle: 'cc1', testFile: 'a.ts', result: 'passed' },
+      { specIds: ['AUTH-001-TC-002'], testTitle: 'cc2', testFile: 'a.ts', result: 'passed' },
+      { specIds: ['AUTH-001-TC-003'], testTitle: 'cc3', testFile: 'a.ts', result: 'failed' },
+      { specIds: ['AUTH-002-TC-001'], testTitle: 'cc4', testFile: 'a.ts', result: 'passed' },
+      { specIds: ['AUTH-005-TC-001'], testTitle: 'cc5', testFile: 'a.ts', result: 'passed' },
+      { specIds: ['AUTH-005-TC-002'], testTitle: 'cc6', testFile: 'a.ts', result: 'passed' },
     ];
 
     const matrix = computeCoverage(contract, traces);
     // All 6 cases have linked tests
     expect(matrix.caseCoverage).toBe(100);
-    // 5/6 pass (AUTH-001-CC-003 fails)
+    // 5/6 pass (AUTH-001-TC-003 fails)
     expect(matrix.passingCaseCoverage).toBeCloseTo(83.3, 0);
 
     const auth001 = matrix.specs.find(s => s.id === 'AUTH-001')!;
-    const cc003 = auth001.cases.find(c => c.id === 'AUTH-001-CC-003')!;
+    const cc003 = auth001.cases.find(c => c.id === 'AUTH-001-TC-003')!;
     expect(cc003.covered).toBe(true);
     expect(cc003.passing).toBe(false);
   });

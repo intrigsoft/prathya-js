@@ -26,6 +26,9 @@ export interface Spec {
   changelog: ChangelogEntry[];
 }
 
+export const DEFAULT_SPEC_ID_PATTERN = '^[A-Z][A-Z0-9_-]*-\\d{3}$';
+export const DEFAULT_CASE_ID_PATTERN = '^[A-Z][A-Z0-9_-]*-\\d{3}-TC-\\d{3}$';
+
 export interface ModuleContract {
   moduleId: string;
   moduleName: string;
@@ -33,6 +36,8 @@ export interface ModuleContract {
   owner?: string;
   created: string;
   version: string;
+  specIdPattern: string;
+  caseIdPattern: string;
   specs: Spec[];
 }
 

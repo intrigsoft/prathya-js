@@ -2,7 +2,10 @@ import * as fs from 'node:fs';
 import * as yaml from 'js-yaml';
 import Ajv from 'ajv';
 import type { ModuleContract, Spec, SpecStatus } from './model.js';
+import { DEFAULT_SPEC_ID_PATTERN, DEFAULT_CASE_ID_PATTERN } from './model.js';
 
+// Base schema validates structure but NOT id patterns — those are validated
+// separately using configurable patterns from the module section.
 const contractSchema = {
   type: 'object',
   required: ['module', 'specs'],
@@ -17,6 +20,8 @@ const contractSchema = {
         owner: { type: 'string' },
         created: { type: 'string' },
         version: { type: 'string', pattern: '^\\d+\\.\\d+\\.\\d+$' },
+        spec_id_pattern: { type: 'string' },
+        case_id_pattern: { type: 'string' },
       },
       additionalProperties: false,
     },
@@ -26,7 +31,7 @@ const contractSchema = {
         type: 'object',
         required: ['id', 'version', 'status', 'title', 'description', 'acceptance_criteria', 'cases', 'changelog'],
         properties: {
-          id: { type: 'string', pattern: '^[A-Z][A-Z0-9_-]*-\\d{3}$' },
+          id: { type: 'string' },
           version: { type: 'string', pattern: '^\\d+\\.\\d+\\.\\d+$' },
           status: { type: 'string', enum: ['draft', 'approved', 'deprecated', 'superseded'] },
           title: { type: 'string', minLength: 1 },
@@ -40,7 +45,7 @@ const contractSchema = {
               type: 'object',
               required: ['id', 'description'],
               properties: {
-                id: { type: 'string', pattern: '^[A-Z][A-Z0-9_-]*-\\d{3}-CC-\\d{3}$' },
+                id: { type: 'string' },
                 description: { type: 'string', minLength: 1 },
               },
               additionalProperties: false,
@@ -97,7 +102,16 @@ export function parseContractYaml(content: string, sourcePath: string = '<inline
   }
 
   const data = raw as {
-    module: { id: string; name: string; description: string; owner?: string; created?: string; version: string };
+    module: {
+      id: string;
+      name: string;
+      description: string;
+      owner?: string;
+      created?: string;
+      version: string;
+      spec_id_pattern?: string;
+      case_id_pattern?: string;
+    };
     specs: Array<{
       id: string;
       version: string;
@@ -112,16 +126,40 @@ export function parseContractYaml(content: string, sourcePath: string = '<inline
     }>;
   };
 
-  // Check for duplicate spec IDs
+  // Resolve ID patterns (custom or defaults)
+  const specIdPattern = data.module.spec_id_pattern ?? DEFAULT_SPEC_ID_PATTERN;
+  const caseIdPattern = data.module.case_id_pattern ?? DEFAULT_CASE_ID_PATTERN;
+
+  // Validate the patterns are valid regexes
+  let specIdRegex: RegExp;
+  let caseIdRegex: RegExp;
+  try {
+    specIdRegex = new RegExp(specIdPattern);
+  } catch {
+    throw new Error(`Invalid spec_id_pattern '${specIdPattern}' in ${sourcePath}`);
+  }
+  try {
+    caseIdRegex = new RegExp(caseIdPattern);
+  } catch {
+    throw new Error(`Invalid case_id_pattern '${caseIdPattern}' in ${sourcePath}`);
+  }
+
+  // Validate spec and case IDs against patterns
   const specIds = new Set<string>();
   const caseIds = new Set<string>();
   for (const spec of data.specs) {
+    if (!specIdRegex.test(spec.id)) {
+      throw new Error(`Spec ID '${spec.id}' does not match pattern /${specIdPattern}/ in ${sourcePath}`);
+    }
     if (specIds.has(spec.id)) {
       throw new Error(`Duplicate spec ID '${spec.id}' in ${sourcePath}`);
     }
     specIds.add(spec.id);
 
     for (const c of spec.cases) {
+      if (!caseIdRegex.test(c.id)) {
+        throw new Error(`Case ID '${c.id}' does not match pattern /${caseIdPattern}/ in ${sourcePath}`);
+      }
       if (caseIds.has(c.id)) {
         throw new Error(`Duplicate case ID '${c.id}' in ${sourcePath}`);
       }
@@ -165,6 +203,8 @@ export function parseContractYaml(content: string, sourcePath: string = '<inline
     owner: data.module.owner,
     created: data.module.created ?? '',
     version: data.module.version,
+    specIdPattern,
+    caseIdPattern,
     specs,
   };
 }

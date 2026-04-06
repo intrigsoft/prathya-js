@@ -27,7 +27,7 @@ CONTRACT.yaml is the single source of truth for what the system must do. Specs a
 
 Key rules:
 - Spec IDs are permanent, immutable, and append-only ({MODULE}-{NNN})
-- Case IDs follow {SPEC_ID}-CC-{NNN}
+- Case IDs follow {SPEC_ID}-TC-{NNN}
 - Specs are never deleted — only deprecated or superseded
 - Status lifecycle: draft → approved → deprecated/superseded
 - Version bumps: major = breaking, minor = additive, patch = wording only
@@ -105,7 +105,7 @@ server.tool(
   'get_spec',
   'Get full details of a single spec by ID, including acceptance criteria, cases, version history, and supersession chain.',
   {
-    id: z.string().describe('Spec ID (e.g. AUTH-001) or case ID (e.g. AUTH-001-CC-001)'),
+    id: z.string().describe('Spec ID (e.g. AUTH-001) or case ID (e.g. AUTH-001-TC-001)'),
     contract_file: z.string().optional().describe('Path to CONTRACT.yaml'),
   },
   async ({ id, contract_file }) => {
@@ -575,7 +575,7 @@ function safeCall(fn: () => string): { content: Array<{ type: 'text'; text: stri
 
 function findSpec(contract: ModuleContract, id: string): Spec {
   // Check if it's a case ID — find the parent spec
-  const ccMatch = id.match(/^(.+)-CC-\d+$/);
+  const ccMatch = id.match(/^(.+)-TC-\d+$/);
   if (ccMatch) {
     const parentId = ccMatch[1];
     const spec = contract.specs.find(r => r.id === parentId);

@@ -39,22 +39,22 @@ describe('parseContract', () => {
   });
 
   test('rejects invalid YAML', ({ spec }) => {
-    spec('PRATYA-001-CC-001');
+    spec('PRATYA-001-TC-001');
     expect(() => parseContractYaml('{{{', 'test.yaml')).toThrow('Failed to parse YAML');
   });
 
   test('rejects non-object YAML', ({ spec }) => {
-    spec('PRATYA-001-CC-002');
+    spec('PRATYA-001-TC-002');
     expect(() => parseContractYaml(':::invalid', 'test.yaml')).toThrow('empty or not an object');
   });
 
   test('rejects empty content', ({ spec }) => {
-    spec('PRATYA-001-CC-002');
+    spec('PRATYA-001-TC-002');
     expect(() => parseContractYaml('', 'test.yaml')).toThrow('empty or not an object');
   });
 
   test('accepts empty specs list', ({ spec }) => {
-    spec('PRATYA-001-CC-003');
+    spec('PRATYA-001-TC-003');
     const yaml = `
 module:
   id: AUTH
@@ -68,7 +68,7 @@ specs: []
   });
 
   test('rejects malformed spec IDs', ({ spec }) => {
-    spec('PRATYA-001-CC-004');
+    spec('PRATYA-001-TC-004');
     const yaml = `
 module:
   id: AUTH
@@ -85,11 +85,11 @@ specs:
     cases: []
     changelog: []
 `;
-    expect(() => parseContractYaml(yaml)).toThrow('validation failed');
+    expect(() => parseContractYaml(yaml)).toThrow('does not match pattern');
   });
 
   test('rejects duplicate spec IDs', ({ spec }) => {
-    spec('PRATYA-001-CC-005');
+    spec('PRATYA-001-TC-005');
     const yaml = `
 module:
   id: AUTH
@@ -118,7 +118,7 @@ specs:
   });
 
   test('rejects broken superseded_by reference', ({ spec }) => {
-    spec('PRATYA-001-CC-006');
+    spec('PRATYA-001-TC-006');
     const yaml = `
 module:
   id: AUTH
@@ -140,7 +140,7 @@ specs:
   });
 
   test('rejects broken supersedes reference', ({ spec }) => {
-    spec('PRATYA-001-CC-007');
+    spec('PRATYA-001-TC-007');
     const yaml = `
 module:
   id: AUTH
@@ -159,5 +159,63 @@ specs:
     changelog: []
 `;
     expect(() => parseContractYaml(yaml)).toThrow("supersedes 'AUTH-999' which does not exist");
+  });
+
+  test('accepts custom spec and case ID patterns', ({ spec }) => {
+    spec('PRATYA-001');
+    const yaml = `
+module:
+  id: AUTH
+  name: Auth
+  description: Test
+  version: 1.0.0
+  spec_id_pattern: "^AUTH\\\\.[A-Z]+$"
+  case_id_pattern: "^AUTH\\\\.[A-Z]+\\\\.\\\\d+$"
+specs:
+  - id: AUTH.LOGIN
+    version: 1.0.0
+    status: approved
+    title: Login
+    description: Test
+    acceptance_criteria: []
+    cases:
+      - id: AUTH.LOGIN.1
+        description: Wrong password
+    changelog: []
+`;
+    const contract = parseContractYaml(yaml);
+    expect(contract.specs).toHaveLength(1);
+    expect(contract.specs[0].cases).toHaveLength(1);
+    expect(contract.specIdPattern).toBe('^AUTH\\.[A-Z]+$');
+    expect(contract.caseIdPattern).toBe('^AUTH\\.[A-Z]+\\.\\d+$');
+  });
+
+  test('rejects IDs that do not match custom patterns', ({ spec }) => {
+    spec('PRATYA-001');
+    const yaml = `
+module:
+  id: AUTH
+  name: Auth
+  description: Test
+  version: 1.0.0
+  spec_id_pattern: "^AUTH\\\\.[A-Z]+$"
+specs:
+  - id: AUTH-001
+    version: 1.0.0
+    status: approved
+    title: Test
+    description: Test
+    acceptance_criteria: []
+    cases: []
+    changelog: []
+`;
+    expect(() => parseContractYaml(yaml)).toThrow('does not match pattern');
+  });
+
+  test('uses default TC pattern for case IDs', ({ spec }) => {
+    spec('PRATYA-001');
+    const contract = parseContract(path.join(FIXTURE_DIR, 'valid-contract.yaml'));
+    expect(contract.specIdPattern).toBe('^[A-Z][A-Z0-9_-]*-\\d{3}$');
+    expect(contract.caseIdPattern).toBe('^[A-Z][A-Z0-9_-]*-\\d{3}-TC-\\d{3}$');
   });
 });
