@@ -1,5 +1,11 @@
 # @intrigsoft/pratya-core
 
+## 0.0.4
+
+### Patch Changes
+
+- [`9dec1e5`](https://github.com/intrigsoft/prathya-js/commit/9dec1e560e928cc49a7894efe14f7ef10265f08d) - Structureal refactoring
+
 ## 0.0.3
 
 ### Patch Changes
